@@ -1,0 +1,13 @@
+[submodule "controller"]
+	path = controller
+	url = https://gitlab.eurecom.fr/flexran/flexran-rtc.git
+[submodule "agent"]
+	path = agent
+	url = https://gitlab.eurecom.fr/oai/openairinterface5g.git
+	branch = develop
+[submodule "ll-mec"]
+	path = ll-mec
+	url = https://gitlab.eurecom.fr/mosaic-5g/ll-mec.git
+[submodule "jox"]
+	path = jox
+	url = https://gitlab.eurecom.fr/mosaic-5g/jox.git
