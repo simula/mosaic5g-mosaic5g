@@ -1,12 +1,17 @@
-# MOSAIC-5G
-A platform for Software-Defined Radio Access Networks
+# MOSAIC5G Ecosystem 
+M5G is an ecosystem of opensource platforms and use-cases for 4G-5G R&D. 
+
+
+A service delivery platform for 5G network across reusable software 
 
 Mosaic-5G is composed of the following modules:
 
+* The network Store 
 * The JOX juju orchestrator
-* The FlexRAN real-time master controller
-* The FlexRAN agent running at the eNodeB
 * The LL-MEC low latency MEC platform
+* The FlexRAN and FlexCN real-time master controller
+* The FlexRAN agent for monolitic and disaggregated RAN
+* The FlexCN agent for  monolitic and disaggregated CN
 
 This repository is designed to serve as a meta repository from where each 
 submodules can be pulled. To get the code, simply clone this repository and 
@@ -19,6 +24,14 @@ git submodule init
 Then choose to load the appropriate submodule depending on the deployment node 
 (agent or controller).
 
+## Store 
+For the jox directory, simply run:
+```
+git submodule update store
+```
+The source code of the jox  will be cloned from the appropriate repository
+and can be found in the **store** directory.
+
 ## Jox juju orchestrator
 
 For the jox directory, simply run:
@@ -28,7 +41,16 @@ git submodule update jox
 The source code of the jox  will be cloned from the appropriate repository
 and can be found in the **jox** directory.
 
-## FlexRAN real-time controller
+## LL-MEC low latency MEC 
+
+For the ll-mec, simply run:
+```
+git submodule update ll-mec
+```
+The source code of the ll-mec will be cloned and can be found in the 
+**ll-mec** directory.
+
+## FlexRAN and FlexCN real-time controller
 
 For the FlexRAN controller simply run:
 ```
@@ -43,13 +65,12 @@ For the FlexRAN agent simply run:
 git submodule update agent
 ```
 The source code of the agent will be cloned and can be found in the 
-**agent** directory.
+**ran-agent** directory.
 
-## LL-MEC low latency MEC 
-
-For the ll-mec, simply run:
+## FlexCN agent
+For the FlexRAN agent simply run:
 ```
-git submodule update ll-mec
+git submodule update agent
 ```
-The source code of the ll-mec will be cloned and can be found in the 
-**ll-mec** directory.
+The source code of the agent will be cloned and can be found in the 
+**cn-agent** directory.
