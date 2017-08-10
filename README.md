@@ -27,7 +27,7 @@ Then choose to load the appropriate submodule depending on the deployment node
 ## Store 
 For the jox directory, simply run:
 ```
-git submodule update store
+git submodule update store --remote
 ```
 The source code of the jox  will be cloned from the appropriate repository
 and can be found in the **store** directory.
@@ -36,7 +36,7 @@ and can be found in the **store** directory.
 
 For the jox directory, simply run:
 ```
-git submodule update jox
+git submodule update jox --remote
 ```
 The source code of the jox  will be cloned from the appropriate repository
 and can be found in the **jox** directory.
@@ -45,7 +45,7 @@ and can be found in the **jox** directory.
 
 For the ll-mec, simply run:
 ```
-git submodule update ll-mec
+git submodule update ll-mec --remote
 ```
 The source code of the ll-mec will be cloned and can be found in the 
 **ll-mec** directory.
@@ -54,7 +54,7 @@ The source code of the ll-mec will be cloned and can be found in the
 
 For the FlexRAN controller simply run:
 ```
-git submodule update controller
+git submodule update controller --remote
 ```
 The source code of the controller will be cloned from the appropriate repository
 and can be found in the **controller** directory.
@@ -62,7 +62,7 @@ and can be found in the **controller** directory.
 ## FlexRAN agent
 For the FlexRAN agent-r simply run:
 ```
-git submodule update agent-r
+git submodule update agent-r --remote
 ```
 The source code of the agent will be cloned and can be found in the 
 **agent-r** directory.
@@ -70,7 +70,7 @@ The source code of the agent will be cloned and can be found in the
 ## FlexCN agent
 For the FlexCN agent-c simply run:
 ```
-git submodule update agent-c
+git submodule update agent-c --remote
 ```
 The source code of the agent will be cloned and can be found in the 
 **agent-c** directory.
