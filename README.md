@@ -1,10 +1,7 @@
 # MOSAIC5G Ecosystem 
-M5G is an ecosystem of opensource platforms and use-cases for 4G-5G R&D. 
+M5G is an ecosystem of opensource platforms and use-cases for 4G-5G R&D to build a service delivery platform across reusable software components. 
 
-
-A service delivery platform for 5G network across reusable software 
-
-Mosaic-5G is composed of the following modules:
+Mosaic-5G is composed of the following submodules:
 
 * The network Store 
 * The JOX juju orchestrator
@@ -22,7 +19,7 @@ git submodule init
 ```
 
 Then choose to load the appropriate submodule depending on the deployment node 
-(agent or controller).
+(agent or controller). For more information about submodules, have a look at https://subfictional.com/fun-with-git-submodules/
 
 ## Store 
 For the jox directory, simply run:
