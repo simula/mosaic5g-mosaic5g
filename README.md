@@ -10,8 +10,8 @@ Mosaic-5G is composed of the following modules:
 * The JOX juju orchestrator
 * The LL-MEC low latency MEC platform
 * The FlexRAN and FlexCN real-time master controller
-* The FlexRAN agent for monolitic and disaggregated RAN
-* The FlexCN agent for  monolitic and disaggregated CN
+* The FlexRAN agent-r for monolitic and disaggregated RAN
+* The FlexCN agent-c for  monolitic and disaggregated CN
 
 This repository is designed to serve as a meta repository from where each 
 submodules can be pulled. To get the code, simply clone this repository and 
@@ -60,17 +60,17 @@ The source code of the controller will be cloned from the appropriate repository
 and can be found in the **controller** directory.
 
 ## FlexRAN agent
-For the FlexRAN agent simply run:
+For the FlexRAN agent-r simply run:
 ```
-git submodule update agent
+git submodule update agent-r
 ```
 The source code of the agent will be cloned and can be found in the 
-**ran-agent** directory.
+**agent-r** directory.
 
 ## FlexCN agent
-For the FlexRAN agent simply run:
+For the FlexCN agent-c simply run:
 ```
-git submodule update agent
+git submodule update agent-c
 ```
 The source code of the agent will be cloned and can be found in the 
-**cn-agent** directory.
+**agent-c** directory.
