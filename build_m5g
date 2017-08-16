@@ -1,0 +1,509 @@
+#!/bin/bash
+################################################################################
+#
+# Copyright (c) 2017, Mosaic5G.io and eurecom.fr
+# All rights reserved.
+#
+# Redistribution and use in source and binary forms, with or without
+# modification, are permitted provided that the following conditions are met:
+#
+# 1. Redistributions of source code must retain the above copyright notice, this
+#    list of conditions and the following disclaimer.
+# 2. Redistributions in binary form must reproduce the above copyright notice,
+#    this list of conditions and the following disclaimer in the documentation
+#    and/or other materials provided with the distribution.
+#
+# THIS SOFTWARE IS PROVIDED BY THE COPYRIGHT HOLDERS AND CONTRIBUTORS "AS IS" AND
+# ANY EXPRESS OR IMPLIED WARRANTIES, INCLUDING, BUT NOT LIMITED TO, THE IMPLIED
+# WARRANTIES OF MERCHANTABILITY AND FITNESS FOR A PARTICULAR PURPOSE ARE
+# DISCLAIMED. IN NO EVENT SHALL THE COPYRIGHT OWNER OR CONTRIBUTORS BE LIABLE FOR
+# ANY DIRECT, INDIRECT, INCIDENTAL, SPECIAL, EXEMPLARY, OR CONSEQUENTIAL DAMAGES
+# (INCLUDING, BUT NOT LIMITED TO, PROCUREMENT OF SUBSTITUTE GOODS OR SERVICES;
+# LOSS OF USE, DATA, OR PROFITS; OR BUSINESS INTERRUPTION) HOWEVER CAUSED AND
+# ON ANY THEORY OF LIABILITY, WHETHER IN CONTRACT, STRICT LIABILITY, OR TORT
+# (INCLUDING NEGLIGENCE OR OTHERWISE) ARISING IN ANY WAY OUT OF THE USE OF THIS
+# SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
+#
+# The views and conclusions contained in the software and documentation are those
+# of the authors and should not be interpreted as representing official policies,
+# either expressed or implied, of the FreeBSD Project.
+#
+################################################################################
+# file build_m5g
+# brief  Mosaic5G.io automated build and install tool 
+# author  Navid Nikaein
+
+export DEBIAN_FRONTEND=noninteractive
+
+
+###################################
+# colorful echos
+###################################
+
+black='\E[30m'
+red='\E[31m'
+green='\E[32m'
+yellow='\E[33m'
+blue='\E[1;34m'
+magenta='\E[35m'
+cyan='\E[36m'
+white='\E[37m'
+reset_color='\E[00m'
+COLORIZE=1
+
+cecho()  {  
+    # Color-echo
+    # arg1 = message
+    # arg2 = color
+    local default_msg="No Message."
+    message=${1:-$default_msg}
+    color=${2:-$green}
+    [ "$COLORIZE" = "1" ] && message="$color$message$reset_color"
+    echo -e "$message"
+    return
+}
+
+echo_error()   { cecho "$*" $red          ;}
+echo_fatal()   { cecho "$*" $red; exit -1 ;}
+echo_warning() { cecho "$*" $yellow       ;}
+echo_success() { cecho "$*" $green        ;}
+echo_info()    { cecho "$*" $blue         ;}
+
+
+################################
+# Set the vars 
+################################
+SUDO='sudo -E'
+ORIGIN_PATH=$PWD
+m5g_path=$(dirname $(readlink -f $0))
+
+rtc_path=$m5g_path/controller
+rtc_exec=$rtc_path/build
+rtc_exec_name=rt_controller
+rtc_branch=develop
+
+rtc_path=$m5g_path/controller
+rtc_exec=$rtc_path/build
+rtc_exec_name=rt_controller
+rtc_branch=develop
+
+jox_path=$m5g_path/jox
+rtc_exec=$rtc_path/scripts
+jox_exec_name=jox
+jox_branch=develop
+
+
+echo_info "Mosaic5G Path:           $m5g_path"
+echo_info "Controller Path:         $rtc_path"
+
+os=`gawk -F= '/^NAME/{print $2}' /etc/os-release`
+ubuntu_distrib=$(lsb_release -si)$(lsb_release -sr)
+pb_version=3
+
+################################
+# Function to killall the subprocesses when Ctrl-C Key is hit
+###############################
+
+function handle_ctrl_c(){
+CURPID=$$
+ppid=$$
+arraycounter=1
+echo_info "** Trapped CTRL-C. Killing all subprocesses now..."
+while true
+do
+    FORLOOP=FALSE
+    # Get all the child process id
+    for i in `ps -ef| awk '$3 == '$ppid' { print $2 }'`
+    do
+        if [ $i -ne $CURPID ] ; then
+            procid[$arraycounter]=$i
+            arraycounter=`expr $arraycounter + 1`
+            ppid=$i
+            FORLOOP=TRUE
+        fi
+    done
+    if [ "$FORLOOP" = "FALSE" ] ; then
+        arraycounter=`expr $arraycounter - 1`
+        ## We want to kill child process id first and then parent id's
+        while [ $arraycounter -ne 0 ]
+        do  
+            echo "first we send ctrl-c to program"
+            $SUDO kill -INT "${procid[$arraycounter]}"
+            sleep 3
+            echo "Now we force kill if that didn't work"
+            $SUDO kill -9 "${procid[$arraycounter]}" >/dev/null
+            arraycounter=`expr $arraycounter - 1`
+        done
+        exit
+    fi
+done
+}
+
+############################
+# install additonal tools 
+##########################
+
+install_required_packages(){
+
+    $SUDO apt-get update -y
+    $SUDO apt-get install gawk -y
+    $SUDO apt-get install virt-what -y
+    # snap 
+    $SUDO apt-get install snapcraft build-essential
+    
+}
+install_optional_packages (){
+    $SUDO apt-get update
+    $SUDO apt-get install -y \
+	  check \
+	  dialog \
+	  gawk \
+	  python-dev  \
+	  python-pexpect \
+	  python-pip \
+	  sshfs \
+	  swig  \
+	  tshark \
+	  exuberant-ctags \
+          ntpdate \
+	  tree \
+	  htop \
+	  python  \
+          vim \
+	  emacs \
+	  wireshark \
+	  ccze \
+	  iperf \
+	  iperf3 \
+	  mscgen \
+	  gdb \
+	  git \
+	  ethtool \
+	  meld \
+	  hping3 
+}
+
+#######################################
+# install and build mosaic5G.io platforms 
+#######################################
+build_jox(){
+
+    git submodule update jox --remote
+    cd $jox_path
+    git checkout $jox_branch
+    sourcce ./joxenv
+    echo_info "./scripts/build_jox"
+    
+}
+
+build_rtc(){
+
+    git submodule update controller --remote
+    
+    if [ "$kernel" == "generic" ]; then 
+	build_args="$build_args -r"
+    fi
+   
+    if [ -z $pb_version ] ; then
+        build_args="$build_args -p $pb_version"
+    fi
+
+    if [ -z $bind_port ] ; then 
+	exec_args="-p $bind_port"	
+    fi 
+
+    if [ -z $rest_port ] ; then
+        exec_args="$exec_args -n $rest_port"
+    fi
+    
+    cd $rtc_path
+    git checkout $rtc_branch
+    
+    export FLEXRAN_RTC_HOME=$rtc_path
+    export FLEXRAN_RTC_EXEC=$rtc_exec
+   
+    echo_info "./tools/install_dependencies $pb_version" 
+    echo_info "./build_flexran.sh $build_args"
+    cd -
+    echo_info "build FlexRAN RTC done"
+}
+build_agent_r(){
+
+    git submodule update agent-r --remote
+
+    echo_info "build FlexRAN Agent done"
+}
+
+
+
+build_llmec(){
+
+    git submodule update ll-mec --remote
+
+    echo_info "build lowlatency MEC done"
+}
+
+build_m5g (){
+ 
+    build_rtc
+    build_agent_r
+    build_jox
+    build_llmec
+}
+
+snap_rtc(){
+    echo ''
+}
+
+snap_agent_r(){
+    echo ''
+}
+snap_agent_c(){
+    echo ''
+}
+snap_llmec(){
+    echo ''
+}
+
+    
+snap_m5g (){
+ 
+    snap_rtc
+    snap_agent_r
+    snap_agent_c
+    snap_llmec
+}
+
+init_snap_m5g(){
+    echo ''
+    
+}
+
+init_build_m5g(){
+
+    if [ "yes" != "$(cat $m5g_path/.module_init)" ]; then
+	git submodule init
+	echo "yes"  > $m5g_path/.module_init
+    fi 
+
+}
+
+check_dist(){
+
+    if [[ $os == *"Ubuntu"* ]]; then
+	
+	if [[ $ubuntu_distrib == *"16"* ]]; then 
+	    echo_info "Detected $ubuntu_distrib"
+	else 
+	    echo_warning "MOSAIC-%G may not properly work in $ubuntu_distrib"
+	    echo_warning "Try Ubuntu 16.04"
+	fi
+    else
+	echo_fatal "Unsupported OS $os"
+    fi
+    
+}
+
+############################
+# Clean all
+###########################
+
+clean_all(){
+    echo_info "cleaning "
+}
+
+############################
+# manage options and helps
+###########################
+function print_help() {
+  echo_info '
+This program installs the legacy Mosaic5G.io software platforms from snaps
+or build a custom platform from the source file. 
+You should have ubuntu 16.xx. Root password required.
+Options
+-h
+   print this help
+--clean-all
+   Clean all files to make a rebuild from start"
+--install-kernel
+   install the required kernel
+-i | --install-required-pkg
+   install required packages for build and/or snap process
+-m | --build-m5g
+   Builds all the Mosaic5G.io software plarforms from source 
+-M | --snap-m5g
+   Install all of the Mosaic5G.io platforms form snap
+-j | --build-jox
+   Builds JOX Orchestrator
+-l | --build-llmec
+   Builds lowlatency MEC platform from source
+-L | --snap-llmec
+   Install lowlatency MEC platform from snap
+-f | --build-flexran
+   Build FlexRAN realtime controller from souce 
+-F | --snap-flexran
+   Install FlexRAN realtime controller from snap 
+-r | --build-agent-r
+   Builds FlexRAN agent with OpenAirInterface from source
+-R | --build-agent-r
+   install FlexRAN agent with OpenAirInterface from snap
+-p | --pb-version
+   Set the protobuf version for FlexRAN RTC. Valid options 2 and 3.
+-o | --install-optional-packages
+   Install useful but not mandatory packages such as vim, valgrind
+Usage:
+- build_m5g -i -m : insatll all the sanps and run 
+- build_m5g -i -j
+'
+}
+
+
+function main() {
+    until [ -z "$1" ]; do
+	
+	case "$1" in
+	    --clean-snaps)
+		CLEAN_SNAPS=1
+		shift;;
+	    -k | --install-kernel)
+		INSTALL_KERNEL=1
+		echo_info "Will install the kernel"
+		shift;;
+	    -i | --install-required-pkg)
+		INSTALL_PKG=1
+		echo_info "Will install the required packages for build and snap process"
+		shift;;
+	    -m | --build-m5g)
+		BUILD_M5G=1
+		echo_info "Will build mosaic5G.io platforms from source"
+		shift;;
+	    -M | --snap-m5g)
+		SNAP_M5G=1
+		echo_info "Will install mosaic5G.io platforms from snap"
+		shift;;
+	    -j | --build-jox)
+		BUILD_JOX=1
+		echo_info "Will build the environment for JOX"
+		shift;;
+	    -l | --build-llmec)
+		BUILD_LLMEC=1
+		echo_info "Will build ll-mec from source"
+		shift;;
+	    -L | --snap-llmec)
+		SNAP_LLMEC=1
+		echo_info "Will install ll-mec from snap"
+		shift;;
+	    -f | --build-flexran)
+		BUILD_RTC=1
+		echo_info "Will build FlexRAN Realtime Controller (RTC) from source"
+		shift;;
+	    -F | --snap-flexran)
+		SNAP_RTC=1
+		echo_info "Will install FlexRAN Realtime Controller (RTC) from snap"
+		shift;;
+	    -r | --build-agent-r)
+		BUILD_AGENT_R=1
+		echo_info "Will build FlexRAN Agent with OpenAirInterface RAN from source"
+		shift;;
+	    -R | --snap-agent-r)
+		SNAP_AGENT_R=1
+		echo_info "Will install FlexRAN Agent with OpenAirInterface RAN from snap"
+		shift;;
+	    -c | --build-agent-c)
+		BUILD_AGENT_C=1
+		echo_info "Will build FlexCN Agent with OpenAirInterface CN from source"
+		shift;;
+	    -C | --snap-agent-c)
+		SNAP_AGENT_C=1
+		echo_info "Will install FlexCN Agent with OpenAirInterface CN from snap"
+		shift;;
+	    -p | --protobuf-version)
+		echo "setting protobuf version to $2" 
+		pb_version=$2
+		shift 2;;
+	    -o | --install-optional-packages)
+		INSTALL_OPTIONAL=1
+		echo_info "Will install optional packages"
+		shift;;
+	    -h | --help)
+		print_help
+		exit 1;;
+	    *)
+		print_help
+		if [ "$1" != "-h" -o "$1" != "--help" -o "$1" != "-help" ]; then 
+		    echo_fatal "Unknown option $1"
+		fi 
+		break;;
+	esac
+    done
+    
+    check_dist
+  
+    if [ "$CLEAN_SNAPS" = "1" ] ; then
+	clean_snaps
+	echo_info "Remove all the previously installed snaps"
+    fi
+    
+    if [ "$INSTALL_PKG" = "1" ] ; then
+	install_required_packages
+	echo_info "Install the required packages"
+    fi
+    
+    
+    if [ "$BUILD_M5G" = "1" ] ; then
+	echo_info "Build Customized MOSAIC5G.io Sotware Platforms"
+	init_build_m5g
+	build_m5g
+    else
+	init_build_m5g
+	if [ "$BUILD_RTC" = "1" ] ; then
+	    echo_info "Building FlexRAN realtime controller"
+            build_rtc
+	fi
+	if [ "$BUILD_AGENT_R" = "1" ] ; then
+	    echo_info "Building FlexRAN Agent with OpenAirInterface RAN"
+            build_agent_r
+	fi
+	if [ "$BUILD_LLMEC" = "1" ] ; then
+	    echo_info "Building lowlatency MEC platforms"
+            build_llmec
+	fi
+	if [ "$BUILD_JOX" = "1" ] ; then
+	    echo_info "Building OX orchestrator"
+            build_jox
+	fi
+    fi
+    
+    if [ "$SNAP_M5G" = "1" ] ; then
+	echo_info "Snap MOSAIC5G.io Sotware Platforms"
+	init_snap_m5g
+	snap_m5g
+    else
+	init_snap_m5g
+	if [ "$SNAP_RTC" = "1" ] ; then
+	    echo_info "Snap FlexRAN realtime controller"
+            snap_rtc
+	fi
+	if [ "$SNAP_AGENT_R" = "1" ] ; then
+	    echo_info "Snap FlexRAN Agent with OpenAirInterface RAN"
+            snap_agent_r
+	fi
+	if [ "$SNAP_AGENT_C" = "1" ] ; then
+	    echo_info "Snap FlexCN Agent with OpenAirInterface CN"
+            snap_agent_c
+	fi
+	if [ "$SNAP_LLMEC" = "1" ] ; then
+	    echo_info "Snap lowlatency MEC platforms"
+            snap_llmec
+	fi
+    fi
+    
+    if [ "$INSTALL_OPTIONAL" = "1" ] ; then
+	echo_info "Installing optional packages"
+	install_optional_packages
+	echo_info "Installing optional packages: done"
+    fi
+    
+}
+
+main "$@"
