@@ -1,17 +1,14 @@
 # MOSAIC5G Ecosystem 
-M5G is an ecosystem of opensource platforms and use-cases for 4G-5G R&D. 
+M5G is an ecosystem of opensource platforms and use-cases for 4G-5G R&D to build a service delivery platform across reusable software components. 
 
-
-A service delivery platform for 5G network across reusable software 
-
-Mosaic-5G is composed of the following modules:
+Mosaic-5G is composed of the following submodules:
 
 * The network Store 
 * The JOX juju orchestrator
 * The LL-MEC low latency MEC platform
 * The FlexRAN and FlexCN real-time master controller
-* The FlexRAN agent for monolitic and disaggregated RAN
-* The FlexCN agent for  monolitic and disaggregated CN
+* The FlexRAN agent-r for monolitic and disaggregated RAN
+* The FlexCN agent-c for  monolitic and disaggregated CN
 
 This repository is designed to serve as a meta repository from where each 
 submodules can be pulled. To get the code, simply clone this repository and 
@@ -22,12 +19,12 @@ git submodule init
 ```
 
 Then choose to load the appropriate submodule depending on the deployment node 
-(agent or controller).
+(agent or controller). For more information about submodules, have a look at https://subfictional.com/fun-with-git-submodules/
 
 ## Store 
 For the jox directory, simply run:
 ```
-git submodule update store
+git submodule update store --remote
 ```
 The source code of the jox  will be cloned from the appropriate repository
 and can be found in the **store** directory.
@@ -36,7 +33,7 @@ and can be found in the **store** directory.
 
 For the jox directory, simply run:
 ```
-git submodule update jox
+git submodule update jox --remote
 ```
 The source code of the jox  will be cloned from the appropriate repository
 and can be found in the **jox** directory.
@@ -45,7 +42,7 @@ and can be found in the **jox** directory.
 
 For the ll-mec, simply run:
 ```
-git submodule update ll-mec
+git submodule update ll-mec --remote
 ```
 The source code of the ll-mec will be cloned and can be found in the 
 **ll-mec** directory.
@@ -54,23 +51,23 @@ The source code of the ll-mec will be cloned and can be found in the
 
 For the FlexRAN controller simply run:
 ```
-git submodule update controller
+git submodule update controller --remote
 ```
 The source code of the controller will be cloned from the appropriate repository
 and can be found in the **controller** directory.
 
 ## FlexRAN agent
-For the FlexRAN agent simply run:
+For the FlexRAN agent-r simply run:
 ```
-git submodule update agent
+git submodule update agent-r --remote
 ```
 The source code of the agent will be cloned and can be found in the 
-**ran-agent** directory.
+**agent-r** directory.
 
 ## FlexCN agent
-For the FlexRAN agent simply run:
+For the FlexCN agent-c simply run:
 ```
-git submodule update agent
+git submodule update agent-c --remote
 ```
 The source code of the agent will be cloned and can be found in the 
-**cn-agent** directory.
+**agent-c** directory.
