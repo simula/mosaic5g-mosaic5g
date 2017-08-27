@@ -12,17 +12,15 @@ Mosaic-5G is composed of the following submodules:
 
 This repository is designed to serve as a meta repository from where each 
 submodules can be pulled. To get the code, 
-1. Create account at (gitlab.eurecom.fr)[http://gitlab.eurecom.fr'> gitlab.eurecom.fr]
-1. Subscribe to [**Mosaic5G**](mailto:mosaic5g@lists.eurecom.fr): 
-  for the users of OpenairInterface.
-  [\[subscribe\]](mailto:mailto:mosaic5g@lists.eurecom.fr?subject=subscribe mosaic5g YourGitAccount YourFirstName YourLastName)
-2. Clone this repository: 
+* Create account at (gitlab.eurecom.fr)[http://gitlab.eurecom.fr'> gitlab.eurecom.fr]
+* Subscribe to [**Mosaic5G**](mailto:mosaic5g@lists.eurecom.fr) by clicking [subscribe](mailto:mailto:mosaic5g@lists.eurecom.fr?subject=subscribe mosaic5g YourGitAccount YourFirstName YourLastName)
+* Clone this repository: 
 
 ```
 git clone http://gitlab.eurecom.fr/mosaic5g/mosaic5g.git
 ```
 
-3. Run
+* Run
 
 ```
 git submodule init
