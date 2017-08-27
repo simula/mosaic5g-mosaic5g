@@ -11,8 +11,18 @@ Mosaic-5G is composed of the following submodules:
 * The FlexCN agent-c for  monolitic and disaggregated CN
 
 This repository is designed to serve as a meta repository from where each 
-submodules can be pulled. To get the code, simply clone this repository and 
-from its main directory run
+submodules can be pulled. To get the code, 
+1. Create account at (gitlab.eurecom.fr)[http://gitlab.eurecom.fr'> gitlab.eurecom.fr]
+1. Subscribe to [**Mosaic5G**](mailto:mosaic5g@lists.eurecom.fr): 
+  for the users of OpenairInterface.
+  [\[subscribe\]](mailto:mailto:mosaic5g@lists.eurecom.fr?subject=subscribe mosaic5g YourGitAccount YourFirstName YourLastName)
+2. Clone this repository: 
+
+```
+git clone http://gitlab.eurecom.fr/mosaic5g/mosaic5g.git
+```
+
+3. Run
 
 ```
 git submodule init
@@ -24,7 +34,7 @@ Then choose to load the appropriate submodule depending on the deployment node
 ## Store 
 For the jox directory, simply run:
 ```
-git submodule update store --remote
+git submodule update store 
 ```
 The source code of the jox  will be cloned from the appropriate repository
 and can be found in the **store** directory.
@@ -33,7 +43,7 @@ and can be found in the **store** directory.
 
 For the jox directory, simply run:
 ```
-git submodule update jox --remote
+git submodule update jox
 ```
 The source code of the jox  will be cloned from the appropriate repository
 and can be found in the **jox** directory.
@@ -42,7 +52,7 @@ and can be found in the **jox** directory.
 
 For the ll-mec, simply run:
 ```
-git submodule update ll-mec --remote
+git submodule update ll-mec
 ```
 The source code of the ll-mec will be cloned and can be found in the 
 **ll-mec** directory.
@@ -51,7 +61,7 @@ The source code of the ll-mec will be cloned and can be found in the
 
 For the FlexRAN controller simply run:
 ```
-git submodule update controller --remote
+git submodule update controller
 ```
 The source code of the controller will be cloned from the appropriate repository
 and can be found in the **controller** directory.
@@ -59,7 +69,7 @@ and can be found in the **controller** directory.
 ## FlexRAN agent
 For the FlexRAN agent-r simply run:
 ```
-git submodule update agent-r --remote
+git submodule update agent-r
 ```
 The source code of the agent will be cloned and can be found in the 
 **agent-r** directory.
@@ -67,7 +77,7 @@ The source code of the agent will be cloned and can be found in the
 ## FlexCN agent
 For the FlexCN agent-c simply run:
 ```
-git submodule update agent-c --remote
+git submodule update agent-c
 ```
 The source code of the agent will be cloned and can be found in the 
 **agent-c** directory.
