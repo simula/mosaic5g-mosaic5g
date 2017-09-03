@@ -13,7 +13,7 @@ Mosaic-5G is composed of the following submodules:
 This repository is designed to serve as a meta repository from where each 
 submodules can be pulled. To get the code, 
 * Create account at [gitlab.eurecom.fr](http://gitlab.eurecom.fr)
-* Subscribe to [**Mosaic5G**](mailto:mosaic5g@lists.eurecom.fr) by clicking [subscribe](mailto:mailto:mosaic5g@lists.eurecom.fr?subject=subscribe mosaic5g YourGitAccount YourFirstName YourLastName)
+* Subscribe to [**Mosaic5G**](mailto:mosaic5g@lists.eurecom.fr) by clicking [subscribe](mailto:mailto:mosaic5g@lists.eurecom.fr?subject=subscribe mosaic5g YourGitAccount YourFirstName YourLastName) and replacing the following placeholders "YourGitAccount" "YourFirstName" "YourLastName"
 * Clone this repository: 
 
 ```
