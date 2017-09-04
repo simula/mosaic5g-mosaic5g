@@ -30,7 +30,6 @@ submodules can be pulled. Follow the instructions below to get the modules and b
 
     1. Inititialize all the Mosaic5G modules:  ```git submodule init``` 
     1. Load manually the appropriate submodule depending on the deployment node (e.g. ll-mec, agent-r, controller). The source code of each  submodule will be cloned from the appropriate repository and can be found in its respective directory. For more information about git submodules, have a look at https://subfictional.com/fun-with-git-submodules/
-        
         * **Network store**:        ```git submodule update store; ```
         * **JoX Juju Orchestrator** : ```git submodule update jox ```
         * **LowLatency MEC**:  ```git submodule update ll-mec```
