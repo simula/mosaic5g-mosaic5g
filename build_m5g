@@ -80,18 +80,24 @@ m5g_path=$(dirname $(readlink -f $0))
 rtc_path=$m5g_path/controller
 rtc_exec=$rtc_path/build
 rtc_exec_name=rt_controller
-rtc_branch=develop
+rtc_branch=develop-uplink
 
-rtc_path=$m5g_path/controller
-rtc_exec=$rtc_path/build
-rtc_exec_name=rt_controller
-rtc_branch=develop
+agent_r_path=$m5g_path/agent-r
+agent_r_exec=$agent_r_path/build
+agent_r_exec_name=lte-softmodem
+agent_r_branch=feature-68-enb-agent
 
 jox_path=$m5g_path/jox
-rtc_exec=$rtc_path/scripts
+jox_exec=$jox_path/scripts
 jox_exec_name=jox
 jox_branch=develop
 
+
+llmec_path=$m5g_path/ll-mec
+llmec_branch=develop
+
+store_path=$m5g_path/store
+store_branch=master
 
 echo_info "Mosaic5G Path:           $m5g_path"
 echo_info "Controller Path:         $rtc_path"
@@ -165,11 +171,11 @@ install_optional_packages (){
 	  swig  \
 	  tshark \
 	  exuberant-ctags \
-          ntpdate \
+      ntpdate \
 	  tree \
 	  htop \
 	  python  \
-          vim \
+      vim \
 	  emacs \
 	  wireshark \
 	  ccze \
@@ -180,25 +186,29 @@ install_optional_packages (){
 	  git \
 	  ethtool \
 	  meld \
-	  hping3 
+	  hping3
+
+	$SUDO pip install ipcalc
 }
+
+
 
 #######################################
 # install and build mosaic5G.io platforms 
 #######################################
 build_jox(){
 
-    git submodule update jox --remote
+    git submodule update jox
     cd $jox_path
     git checkout $jox_branch
-    sourcce ./joxenv
+    source ./joxenv
     echo_info "./scripts/build_jox"
     
 }
 
 build_rtc(){
 
-    git submodule update controller --remote
+    git submodule update controller
     
     if [ "$kernel" == "generic" ]; then 
 	build_args="$build_args -r"
@@ -229,8 +239,11 @@ build_rtc(){
 }
 build_agent_r(){
 
-    git submodule update agent-r --remote
+    git submodule update agent-r 
+    cd $agent_r_path
 
+    git checkout $agent_r_branch
+    
     echo_info "build FlexRAN Agent done"
 }
 
@@ -238,9 +251,24 @@ build_agent_r(){
 
 build_llmec(){
 
-    git submodule update ll-mec --remote
+    git submodule update ll-mec
 
+	cd $llmec_path
+
+    git checkout $llmec_branch
+    
     echo_info "build lowlatency MEC done"
+}
+
+build_store(){
+
+    git submodule update store 
+
+	cd $store_path
+	
+    git checkout $store_branch
+    
+    echo_info "build store"
 }
 
 build_m5g (){
@@ -249,6 +277,7 @@ build_m5g (){
     build_agent_r
     build_jox
     build_llmec
+    build_store
 }
 
 snap_rtc(){
@@ -323,6 +352,8 @@ You should have ubuntu 16.xx. Root password required.
 Options
 -h
    print this help
+--clean-snaps
+   Clean all the snaps"
 --clean-all
    Clean all files to make a rebuild from start"
 --install-kernel
@@ -340,13 +371,15 @@ Options
 -L | --snap-llmec
    Install lowlatency MEC platform from snap
 -f | --build-flexran
-   Build FlexRAN realtime controller from souce 
+   Build FlexRAN realtime controller from source 
 -F | --snap-flexran
    Install FlexRAN realtime controller from snap 
 -r | --build-agent-r
    Builds FlexRAN agent with OpenAirInterface from source
--R | --build-agent-r
+-R | --snap-agent-r
    install FlexRAN agent with OpenAirInterface from snap
+-s | --build-store
+   Builds ans setup the store 
 -p | --pb-version
    Set the protobuf version for FlexRAN RTC. Valid options 2 and 3.
 -o | --install-optional-packages
@@ -409,6 +442,10 @@ function main() {
 		SNAP_AGENT_R=1
 		echo_info "Will install FlexRAN Agent with OpenAirInterface RAN from snap"
 		shift;;
+	    -s | --build-store)
+		BUILD_STORE=1
+		echo_info "Will build Mosaic5G store" 
+		shift;;
 	    -c | --build-agent-c)
 		BUILD_AGENT_C=1
 		echo_info "Will build FlexCN Agent with OpenAirInterface CN from source"
@@ -437,8 +474,6 @@ function main() {
 	esac
     done
     
-    check_dist
-  
     if [ "$CLEAN_SNAPS" = "1" ] ; then
 	clean_snaps
 	echo_info "Remove all the previously installed snaps"
@@ -448,7 +483,8 @@ function main() {
 	install_required_packages
 	echo_info "Install the required packages"
     fi
-    
+	
+    check_dist
     
     if [ "$BUILD_M5G" = "1" ] ; then
 	echo_info "Build Customized MOSAIC5G.io Sotware Platforms"
@@ -469,8 +505,12 @@ function main() {
             build_llmec
 	fi
 	if [ "$BUILD_JOX" = "1" ] ; then
-	    echo_info "Building OX orchestrator"
+	    echo_info "Building JOX orchestrator"
             build_jox
+	fi
+	if [ "$BUILD_STORE" = "1" ] ; then
+	    echo_info "Building Store"
+            build_store
 	fi
     fi
     
