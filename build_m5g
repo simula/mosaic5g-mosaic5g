@@ -364,7 +364,6 @@ init_build_m5g(){
 	git submodule init
 	echo "yes"  > ./submodule_init
     fi 
-    exit 0
 }
 
 ############################
