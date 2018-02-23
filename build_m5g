@@ -69,7 +69,7 @@ SUDO='sudo -E'
 ORIGIN_PATH=$PWD
 m5g_path=$(dirname $(readlink -f $0))
 
-rtc_path=$m5g_path/controller
+rtc_path=$m5g_path/flexran
 rtc_exec=$rtc_path/build
 rtc_exec_name=rt_controller
 rtc_branch=develop-uplink
@@ -97,7 +97,13 @@ store_path=$m5g_path/store
 store_branch=develop
 
 echo_info "Mosaic5G Path:           $m5g_path"
-echo_info "Controller Path:         $rtc_path"
+echo_info "FlexRAN Path:            $rtc_path"
+echo_info "LL-MEC Path:             $llmec_path"
+echo_info "Jox Path:                $jox_path"
+echo_info "Store Path:              $store_path"
+echo_info "OAI agent_r Path:        $agent_r_path"
+echo_info "OAI agent_c Path:        $agent_c_path"
+
 
 os=$(grep "^ID=" /etc/os-release | sed "s/ID=//" | sed "s/\"//g")
 os_release=$(grep "^VERSION_ID=" /etc/os-release | sed "s/VERSION_ID=//" | sed "s/\"//g")
@@ -253,7 +259,7 @@ build_jox(){
 
 build_rtc(){
 
-    git submodule update controller
+    git submodule update flexran
     cd $rtc_path
     git checkout $rtc_branch
     echo_info "Cloned FlexRAN controller $rtc_branch branch"
@@ -354,11 +360,11 @@ init_snap_m5g(){
 
 init_build_m5g(){
 
-    if [ "yes" != "$(cat $m5g_path/.module_init)" ]; then
+    if [ ! -f  ./submodule_init ]; then
 	git submodule init
-	echo "yes"  > $m5g_path/.module_init
+	echo "yes"  > ./submodule_init
     fi 
-
+    exit 0
 }
 
 ############################
