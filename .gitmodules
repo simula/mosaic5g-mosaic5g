@@ -5,10 +5,11 @@
 [submodule "agent-r"]
 	path = agent-r
 	url = https://gitlab.eurecom.fr/oai/openairinterface5g.git
-	branch = feature-68-enb-agent
+	branch = develop
 [submodule "ll-mec"]
 	path = ll-mec
 	url = https://gitlab.eurecom.fr/mosaic5g/ll-mec.git
+	branch = develop
 [submodule "jox"]
 	path = jox
 	url = https://gitlab.eurecom.fr/mosaic5g/jox.git
@@ -16,6 +17,7 @@
 [submodule "agent-c"]
 	path = agent-c
 	url = https://gitlab.eurecom.fr/oai/openair-cn.git
+	branch = openair-cn-llmec
 [submodule "store"]
 	path = store
 	url = https://gitlab.eurecom.fr/mosaic5g/store.git
