@@ -1,32 +1,24 @@
 #!/bin/bash
 ################################################################################
+# Licensed to the Mosaic5G under one or more contributor license
+# agreements. See the NOTICE file distributed with this
+# work for additional information regarding copyright ownership.
+# The Mosaic5G licenses this file to You under the
+# Apache License, Version 2.0  (the "License");
+# you may not use this file except in compliance with the License.
+# You may obtain a copy of the License at
+#  
+#    	http://www.apache.org/licenses/LICENSE-2.0
+  
+#   Unless required by applicable law or agreed to in writing, software
+#   distributed under the License is distributed on an "AS IS" BASIS,
+#   WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
+#   See the License for the specific language governing permissions and
+#   limitations under the License.
+# -------------------------------------------------------------------------------
+#   For more information about the Mosaic5G:
+#   	contact@mosaic-5g.io
 #
-# Copyright (c) 2017, Mosaic5G.io and eurecom.fr
-# All rights reserved.
-#
-# Redistribution and use in source and binary forms, with or without
-# modification, are permitted provided that the following conditions are met:
-#
-# 1. Redistributions of source code must retain the above copyright notice, this
-#    list of conditions and the following disclaimer.
-# 2. Redistributions in binary form must reproduce the above copyright notice,
-#    this list of conditions and the following disclaimer in the documentation
-#    and/or other materials provided with the distribution.
-#
-# THIS SOFTWARE IS PROVIDED BY THE COPYRIGHT HOLDERS AND CONTRIBUTORS "AS IS" AND
-# ANY EXPRESS OR IMPLIED WARRANTIES, INCLUDING, BUT NOT LIMITED TO, THE IMPLIED
-# WARRANTIES OF MERCHANTABILITY AND FITNESS FOR A PARTICULAR PURPOSE ARE
-# DISCLAIMED. IN NO EVENT SHALL THE COPYRIGHT OWNER OR CONTRIBUTORS BE LIABLE FOR
-# ANY DIRECT, INDIRECT, INCIDENTAL, SPECIAL, EXEMPLARY, OR CONSEQUENTIAL DAMAGES
-# (INCLUDING, BUT NOT LIMITED TO, PROCUREMENT OF SUBSTITUTE GOODS OR SERVICES;
-# LOSS OF USE, DATA, OR PROFITS; OR BUSINESS INTERRUPTION) HOWEVER CAUSED AND
-# ON ANY THEORY OF LIABILITY, WHETHER IN CONTRACT, STRICT LIABILITY, OR TORT
-# (INCLUDING NEGLIGENCE OR OTHERWISE) ARISING IN ANY WAY OUT OF THE USE OF THIS
-# SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
-#
-# The views and conclusions contained in the software and documentation are those
-# of the authors and should not be interpreted as representing official policies,
-# either expressed or implied, of the FreeBSD Project.
 #
 ################################################################################
 # file build_m5g
@@ -85,7 +77,12 @@ rtc_branch=develop-uplink
 agent_r_path=$m5g_path/agent-r
 agent_r_exec=$agent_r_path/build
 agent_r_exec_name=lte-softmodem
-agent_r_branch=feature-68-enb-agent
+agent_r_branch=develop
+
+agent_c_path=$m5g_path/agent-c
+agent_c_exec=$agent_c_path/build
+agent_c_exec_name=''
+agent_c_branch=openair-cn-llmec
 
 jox_path=$m5g_path/jox
 jox_exec=$jox_path/scripts
@@ -97,13 +94,36 @@ llmec_path=$m5g_path/ll-mec
 llmec_branch=develop
 
 store_path=$m5g_path/store
-store_branch=master
+store_branch=develop
 
 echo_info "Mosaic5G Path:           $m5g_path"
 echo_info "Controller Path:         $rtc_path"
 
-os=`gawk -F= '/^NAME/{print $2}' /etc/os-release`
-ubuntu_distrib=$(lsb_release -si)$(lsb_release -sr)
+os=$(grep "^ID=" /etc/os-release | sed "s/ID=//" | sed "s/\"//g")
+os_release=$(grep "^VERSION_ID=" /etc/os-release | sed "s/VERSION_ID=//" | sed "s/\"//g")
+os_dist=$os$os_release
+echo_info "Detected OS Dist:        $os_dist"
+
+case "$os" in
+  fedora) os_base="fedora"; os_pm="dnf"; os_cmake="cmake" ;;
+  rhel)   os_base="fedora"; os_pm="yum"; os_cmake="cmake3" ;;
+  centos) os_base="fedora"; os_pm="yum"; os_cmake="cmake3" ;;
+  debian) os_base="debian"; os_pm="apt-get"; os_cmake="cmake" ;;
+  ubuntu) os_base="debian"; os_pm="apt-get"; os_cmake="cmake" ;;
+esac
+
+check_supported_os_dist() {
+    case "$os_dist" in
+        "ubuntu17.10") return 0 ;;
+        "ubuntu17.04") return 0 ;;
+        "ubuntu16.04") return 0 ;;
+        "ubuntu14.04") return 0 ;;
+        "fedora24")    return 0 ;;
+        "rhel7")       return 0 ;;
+        "centos7")     return 0 ;;
+    esac
+    return 1
+}
 pb_version=3
 
 ################################
@@ -151,31 +171,51 @@ done
 
 install_required_packages(){
 
-    $SUDO apt-get update -y
-    $SUDO apt-get install gawk -y
-    $SUDO apt-get install virt-what -y
-    # snap 
-    $SUDO apt-get install snapcraft build-essential
+    if ! check_supported_os_dist; then
+        echo_error "Your distribution $os_dist is not supported by Mosaic5G !"
+        exit 1
+    fi
+    
+    $SUDO $os_pm  update -y
+    $SUDO $os_pm install -y \
+	  virt-what 
+          snapcraft \
+	  build-essential \ 
+	  python-dev  \
+	  python-pexpect \
+	  python-pip  \
+	  python-yaml \
+	  libyaml-dev
+
+	  install_app_dev_package
+}
+
+install_app_dev_package(){
+    
+    $SUDO pip install ipcalc
+    $SUDO pip install matplotlib
+    $SUDO pip install pyyaml
+    $SUDO pip install tornado
+    $SUDO pip install enum
+    $SUDO pip install requests
     
 }
+
 install_optional_packages (){
-    $SUDO apt-get update
-    $SUDO apt-get install -y \
+    $SUDO $os_pm get update
+    $SUDO $os_pm install -y \
 	  check \
 	  dialog \
 	  gawk \
-	  python-dev  \
-	  python-pexpect \
-	  python-pip \
 	  sshfs \
 	  swig  \
 	  tshark \
 	  exuberant-ctags \
-      ntpdate \
+	  ntpdate \
 	  tree \
 	  htop \
 	  python  \
-      vim \
+	  vim \
 	  emacs \
 	  wireshark \
 	  ccze \
@@ -186,9 +226,14 @@ install_optional_packages (){
 	  git \
 	  ethtool \
 	  meld \
-	  hping3
-
-	$SUDO pip install ipcalc
+	  hping3 \
+	  jq  \
+	  wget \
+	  libyaml-dev \
+	  iperf \ 
+          iproute \
+	  iptables 
+	         
 }
 
 
@@ -209,6 +254,9 @@ build_jox(){
 build_rtc(){
 
     git submodule update controller
+    cd $rtc_path
+    git checkout $rtc_branch
+    echo_info "Cloned FlexRAN controller $rtc_branch branch"
     
     if [ "$kernel" == "generic" ]; then 
 	build_args="$build_args -r"
@@ -225,10 +273,7 @@ build_rtc(){
     if [ -z $rest_port ] ; then
         exec_args="$exec_args -n $rest_port"
     fi
-    
-    cd $rtc_path
-    git checkout $rtc_branch
-    
+        
     export FLEXRAN_RTC_HOME=$rtc_path
     export FLEXRAN_RTC_EXEC=$rtc_exec
    
@@ -241,40 +286,39 @@ build_agent_r(){
 
     git submodule update agent-r 
     cd $agent_r_path
-
     git checkout $agent_r_branch
-    
-    echo_info "build FlexRAN Agent done"
+    echo_info "Cloned FlexRAN Agent $agent_r_branch branch"
 }
 
+build_agent_c(){
 
+    git submodule update agent-c
+    cd $agent_c_path
+    git checkout $agent_c_branch
+    echo_info "Cloned ll-mec agent $agent_c_branch branch"
+}
 
 build_llmec(){
 
     git submodule update ll-mec
-
-	cd $llmec_path
-
+    cd $llmec_path
     git checkout $llmec_branch
-    
-    echo_info "build lowlatency MEC done"
+    echo_info "Cloned lowlatency MEC $llmec_branch branch"
 }
 
 build_store(){
 
     git submodule update store 
-
-	cd $store_path
-	
+    cd $store_path
     git checkout $store_branch
-    
-    echo_info "build store"
+    echo_info "Cloned the store $store_branch branch"
 }
 
 build_m5g (){
  
     build_rtc
     build_agent_r
+    build_agent_c
     build_jox
     build_llmec
     build_store
@@ -317,22 +361,6 @@ init_build_m5g(){
 
 }
 
-check_dist(){
-
-    if [[ $os == *"Ubuntu"* ]]; then
-	
-	if [[ $ubuntu_distrib == *"16"* ]]; then 
-	    echo_info "Detected $ubuntu_distrib"
-	else 
-	    echo_warning "MOSAIC-%G may not properly work in $ubuntu_distrib"
-	    echo_warning "Try Ubuntu 16.04"
-	fi
-    else
-	echo_fatal "Unsupported OS $os"
-    fi
-    
-}
-
 ############################
 # Clean all
 ###########################
@@ -346,7 +374,7 @@ clean_all(){
 ###########################
 function print_help() {
   echo_info '
-This program installs the legacy Mosaic5G.io software platforms from snaps
+This program installs the Mosaic5G.io software platforms from snaps
 or build a custom platform from the source file. 
 You should have ubuntu 16.xx. Root password required.
 Options
@@ -360,6 +388,10 @@ Options
    install the required kernel
 -i | --install-required-pkg
    install required packages for build and/or snap process
+-c | --build-agent-c
+   Builds LL-MEC agent with OpenAirInterface from source
+-C | --snap-agent-c
+   install LL-MEC agent with OpenAirInterface from snap
 -m | --build-m5g
    Builds all the Mosaic5G.io software plarforms from source 
 -M | --snap-m5g
@@ -448,11 +480,11 @@ function main() {
 		shift;;
 	    -c | --build-agent-c)
 		BUILD_AGENT_C=1
-		echo_info "Will build FlexCN Agent with OpenAirInterface CN from source"
+		echo_info "Will build LL-MEC Agent with OpenAirInterface CN from source"
 		shift;;
 	    -C | --snap-agent-c)
 		SNAP_AGENT_C=1
-		echo_info "Will install FlexCN Agent with OpenAirInterface CN from snap"
+		echo_info "Will install LL-MEC Agent with OpenAirInterface CN from snap"
 		shift;;
 	    -p | --protobuf-version)
 		echo "setting protobuf version to $2" 
@@ -484,7 +516,6 @@ function main() {
 	echo_info "Install the required packages"
     fi
 	
-    check_dist
     
     if [ "$BUILD_M5G" = "1" ] ; then
 	echo_info "Build Customized MOSAIC5G.io Sotware Platforms"
@@ -499,6 +530,10 @@ function main() {
 	if [ "$BUILD_AGENT_R" = "1" ] ; then
 	    echo_info "Building FlexRAN Agent with OpenAirInterface RAN"
             build_agent_r
+	fi
+	if [ "$BUILD_AGENT_C" = "1" ] ; then
+	    echo_info "Building LL-MEC Agent with OpenAirInterface RAN"
+            build_agent_c
 	fi
 	if [ "$BUILD_LLMEC" = "1" ] ; then
 	    echo_info "Building lowlatency MEC platforms"

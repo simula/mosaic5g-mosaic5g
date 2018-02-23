@@ -1,23 +1,24 @@
-[submodule "controller"]
-	path = controller
+[submodule "flexran"]
+	path = flexran
 	url = https://gitlab.eurecom.fr/flexran/flexran-rtc.git
-	branch = develop-uplink
-[submodule "agent-r"]
-	path = agent-r
-	url = https://gitlab.eurecom.fr/oai/openairinterface5g.git
-	branch = develop
+	branch = develop-uplink 
 [submodule "ll-mec"]
 	path = ll-mec
 	url = https://gitlab.eurecom.fr/mosaic5g/ll-mec.git
 	branch = develop
+[submodule "store"]
+	path = store
+	url = https://gitlab.eurecom.fr/mosaic5g/store.git
 [submodule "jox"]
 	path = jox
 	url = https://gitlab.eurecom.fr/mosaic5g/jox.git
+	branch = develop
+[submodule "agent-r"]
+	path = agent-r
+	url = https://gitlab.eurecom.fr/oai/openairinterface5g.git
 	branch = develop
 [submodule "agent-c"]
 	path = agent-c
 	url = https://gitlab.eurecom.fr/oai/openair-cn.git
 	branch = openair-cn-llmec
-[submodule "store"]
-	path = store
-	url = https://gitlab.eurecom.fr/mosaic5g/store.git
+
