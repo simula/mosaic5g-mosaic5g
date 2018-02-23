@@ -247,16 +247,6 @@ install_optional_packages (){
 #######################################
 # install and build mosaic5G.io platforms 
 #######################################
-build_jox(){
-
-    git submodule update jox
-    cd $jox_path
-    git checkout $jox_branch
-    source ./joxenv
-    echo_info "./scripts/build_jox"
-    
-}
-
 build_rtc(){
 
     git submodule update flexran
@@ -286,13 +276,14 @@ build_rtc(){
     echo_info "./tools/install_dependencies $pb_version" 
     echo_info "./build_flexran.sh $build_args"
     cd -
-    echo_info "build FlexRAN RTC done"
+    echo_info "build FlexRAN RTC done "
 }
 build_agent_r(){
 
     git submodule update agent-r 
     cd $agent_r_path
     git checkout $agent_r_branch
+    cd -
     echo_info "Cloned FlexRAN Agent $agent_r_branch branch"
 }
 
@@ -301,6 +292,7 @@ build_agent_c(){
     git submodule update agent-c
     cd $agent_c_path
     git checkout $agent_c_branch
+    cd -
     echo_info "Cloned ll-mec agent $agent_c_branch branch"
 }
 
@@ -309,6 +301,7 @@ build_llmec(){
     git submodule update ll-mec
     cd $llmec_path
     git checkout $llmec_branch
+    cd - 
     echo_info "Cloned lowlatency MEC $llmec_branch branch"
 }
 
@@ -317,17 +310,28 @@ build_store(){
     git submodule update store 
     cd $store_path
     git checkout $store_branch
+    cd -
     echo_info "Cloned the store $store_branch branch"
+}
+build_jox(){
+
+    git submodule update jox
+    cd $jox_path
+    git checkout $jox_branch
+    source ./joxenv
+    echo_info "./scripts/build_jox"
+    cd -
+    echo_info "Cloned JoX $jox_branch branch"
 }
 
 build_m5g (){
  
     build_rtc
-    build_agent_r
-    build_agent_c
-    build_jox
     build_llmec
     build_store
+    build_jox
+    build_agent_r
+    build_agent_c
 }
 
 snap_rtc(){
