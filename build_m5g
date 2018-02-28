@@ -184,14 +184,15 @@ install_required_packages(){
     
     $SUDO $os_pm  update -y
     $SUDO $os_pm install -y \
-	  virt-what 
+	  virt-what \
           snapcraft \
 	  build-essential \ 
 	  python-dev  \
 	  python-pexpect \
 	  python-pip  \
 	  python-yaml \
-	  libyaml-dev
+	  libyaml-dev  \
+	  python-tk
 
 	  install_app_dev_package
 }
