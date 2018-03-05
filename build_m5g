@@ -68,15 +68,16 @@ echo_info()    { cecho "$*" $blue         ;}
 SUDO='sudo -E'
 ORIGIN_PATH=$PWD
 m5g_path=$(dirname $(readlink -f $0))
+m5g_bin=$m5g_path/bin
+mkdir -p $m5g_bin
 
 rtc_path=$m5g_path/flexran
-rtc_exec=$rtc_path/build
-rtc_exec_name=rt_controller
+rtc_bin=$rtc_path/build/rt_controller
 rtc_branch=develop-uplink
 
 agent_r_path=$m5g_path/agent-r
-agent_r_exec=$agent_r_path/build
-agent_r_exec_name=lte-softmodem
+agent_r_build=$agent_r_path/cmake_targets
+agent_r_bin=$agent_r_path/targets/bin
 agent_r_branch=develop
 
 agent_c_path=$m5g_path/agent-c
@@ -92,8 +93,10 @@ jox_branch=develop
 
 llmec_path=$m5g_path/ll-mec
 llmec_branch=develop
+llmec_bin=$llmec_path/ll-mec
 
 store_path=$m5g_path/store
+store_sdk=$m5g_path/store/sdk
 store_branch=develop
 
 echo_info "Mosaic5G Path:           $m5g_path"
@@ -186,18 +189,23 @@ install_required_packages(){
     $SUDO $os_pm install -y \
 	  virt-what \
           snapcraft \
-	  build-essential \ 
+	  build-essential \
 	  python-dev  \
 	  python-pexpect \
 	  python-pip  \
 	  python-yaml \
 	  libyaml-dev  \
-	  python-tk
-
-	  install_app_dev_package
+	  python-tk    \
+	  doxygen     \
+	  nodejs-legacy \
+	  npm \
+	  curl 
+    
+    install_python_packages
+    install_npm_packages
 }
 
-install_app_dev_package(){
+install_python_packages(){
     
     $SUDO pip install ipcalc
     $SUDO pip install matplotlib
@@ -208,6 +216,10 @@ install_app_dev_package(){
     
 }
 
+install_npm_packages(){
+    
+    sudo npm install apidoc -g
+}
 install_optional_packages (){
     $SUDO $os_pm get update
     $SUDO $os_pm install -y \
@@ -237,9 +249,12 @@ install_optional_packages (){
 	  jq  \
 	  wget \
 	  libyaml-dev \
-	  iperf \ 
-          iproute \
-	  iptables 
+	  iperf \
+	  iproute \
+	  iptables \
+	  meld    \
+	  gitk \
+	  openssh-server 
 	         
 }
 
@@ -274,18 +289,24 @@ build_rtc(){
     export FLEXRAN_RTC_HOME=$rtc_path
     export FLEXRAN_RTC_EXEC=$rtc_exec
    
-    echo_info "./tools/install_dependencies $pb_version" 
-    echo_info "./build_flexran.sh $build_args"
-    cd -
-    echo_info "build FlexRAN RTC done "
+    ./tools/install_dependencies 
+    ./build_flexran_rtc.sh $build_args
+
+    cd $m5g_path
+    cp $rtc_bin $m5g_bin
+    echo_success "Built FlexRAN RTC branch $rtc_branch in $m5g_bin"
 }
 build_agent_r(){
 
     git submodule update agent-r 
     cd $agent_r_path
     git checkout $agent_r_branch
-    cd -
-    echo_info "Cloned FlexRAN Agent $agent_r_branch branch"
+    cd $agent_r_build
+    ./build_oai -I  -w USRP
+    ./build_oai -c -C --eNB  -w USRP 
+    cd $m5g_path
+    cp $agent_r_bin $m5g_bin
+    echo_success "Build FlexRAN Agent $agent_r_branch branch in $agent_r_bin"
 }
 
 build_agent_c(){
@@ -293,8 +314,9 @@ build_agent_c(){
     git submodule update agent-c
     cd $agent_c_path
     git checkout $agent_c_branch
-    cd -
-    echo_info "Cloned ll-mec agent $agent_c_branch branch"
+
+    cd $m5g_path
+    echo_success "Cloned ll-mec agent $agent_c_branch branch"
 }
 
 build_llmec(){
@@ -302,8 +324,11 @@ build_llmec(){
     git submodule update ll-mec
     cd $llmec_path
     git checkout $llmec_branch
-    cd - 
-    echo_info "Cloned lowlatency MEC $llmec_branch branch"
+    ./install_dependencies.sh
+    ./build_ll-mec.sh -d 
+    cd $m5g_path
+    cp $llmec_bin $m5g_bin
+    echo_success "Built LL-MEC $llmec_branch branch in $llmec_bin"
 }
 
 build_store(){
@@ -311,8 +336,14 @@ build_store(){
     git submodule update store 
     cd $store_path
     git checkout $store_branch
-    cd -
-    echo_info "Cloned the store $store_branch branch"
+    cd $store_sdk
+    mkdir -p docs
+    doxygen
+    apidoc -i lib/ -o ./docs/apidoc -f ".*\\.py$"
+    echo_success "Generated the store $store_branch branch"
+
+    cd $m5g_path
+    echo_success "Cloned the store $store_branch branch"
 }
 build_jox(){
 
@@ -322,7 +353,7 @@ build_jox(){
     source ./joxenv
     echo_info "./scripts/build_jox"
     cd -
-    echo_info "Cloned JoX $jox_branch branch"
+    echo_success "Cloned JoX $jox_branch branch"
 }
 
 build_m5g (){
@@ -367,7 +398,7 @@ init_build_m5g(){
 
     if [ ! -f  ./submodule_init ]; then
 	git submodule init
-	echo "yes"  > ./submodule_init
+	echo "yes"  > ./.submodule_init
     fi 
 }
 
@@ -398,6 +429,8 @@ Options
    install the required kernel
 -i | --install-required-pkg
    install required packages for build and/or snap process
+-I | --install-all-packages
+   Install both required and developper/optional/useful pachages 
 -c | --build-agent-c
    Builds LL-MEC agent with OpenAirInterface from source
 -C | --snap-agent-c
@@ -424,8 +457,6 @@ Options
    Builds ans setup the store 
 -p | --pb-version
    Set the protobuf version for FlexRAN RTC. Valid options 2 and 3.
--o | --install-optional-packages
-   Install useful but not mandatory packages such as vim, valgrind
 Usage:
 - build_m5g -i -m : insatll all the sanps and run 
 - build_m5g -i -j
@@ -447,6 +478,10 @@ function main() {
 	    -i | --install-required-pkg)
 		INSTALL_PKG=1
 		echo_info "Will install the required packages for build and snap process"
+		shift;;
+	    -I | --install-optional-packages)
+		INSTALL_OPTIONAL=1
+		echo_info "Will install optional packages"
 		shift;;
 	    -m | --build-m5g)
 		BUILD_M5G=1
@@ -500,10 +535,6 @@ function main() {
 		echo "setting protobuf version to $2" 
 		pb_version=$2
 		shift 2;;
-	    -o | --install-optional-packages)
-		INSTALL_OPTIONAL=1
-		echo_info "Will install optional packages"
-		shift;;
 	    -h | --help)
 		print_help
 		exit 1;;
@@ -523,9 +554,15 @@ function main() {
     
     if [ "$INSTALL_PKG" = "1" ] ; then
 	install_required_packages
-	echo_info "Install the required packages"
+	echo_info "Installed the required packages"
     fi
-	
+
+    if [ "$INSTALL_OPTIONAL" = "1" ] ; then
+	echo_info "Installing optional packages"
+	install_optional_packages
+	echo_info "Installed the optional packages"
+    fi
+
     
     if [ "$BUILD_M5G" = "1" ] ; then
 	echo_info "Build Customized MOSAIC5G.io Sotware Platforms"
@@ -583,11 +620,6 @@ function main() {
 	fi
     fi
     
-    if [ "$INSTALL_OPTIONAL" = "1" ] ; then
-	echo_info "Installing optional packages"
-	install_optional_packages
-	echo_info "Installing optional packages: done"
-    fi
     
 }
 
