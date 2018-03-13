@@ -13,12 +13,11 @@
 	path = jox
 	url = https://gitlab.eurecom.fr/mosaic5g/jox.git
 	branch = develop
-[submodule "agent-r"]
-	path = agent-r
+[submodule "oai-ran"]
+	path = oai-ran
 	url = https://gitlab.eurecom.fr/oai/openairinterface5g.git
 	branch = develop
-[submodule "agent-c"]
-	path = agent-c
+[submodule "oai-cn"]
+	path = oai-cn
 	url = https://gitlab.eurecom.fr/oai/openair-cn.git
 	branch = openair-cn-llmec
-
