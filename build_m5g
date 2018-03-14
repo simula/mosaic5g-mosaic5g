@@ -75,15 +75,15 @@ rtc_path=$m5g_path/flexran
 rtc_bin=$rtc_path/build/rt_controller
 rtc_branch=develop-uplink
 
-agent_r_path=$m5g_path/agent-r
-agent_r_build=$agent_r_path/cmake_targets
-agent_r_bin=$agent_r_path/targets/bin
-agent_r_branch=develop
+oai_ran_path=$m5g_path/oai-ran
+oai_ran_build=$oai_ran_path/cmake_targets
+oai_ran_bin=$oai_ran_path/targets/bin
+oai_ran_branch=develop
 
-agent_c_path=$m5g_path/agent-c
-agent_c_exec=$agent_c_path/build
-agent_c_exec_name=''
-agent_c_branch=openair-cn-llmec
+oai_cn_path=$m5g_path/oai-cn
+oai_cn_exec=$oai_cn_path/build
+oai_cn_exec_name=''
+oai_cn_branch=openair-cn-llmec
 
 jox_path=$m5g_path/jox
 jox_exec=$jox_path/scripts
@@ -104,8 +104,8 @@ echo_info "FlexRAN Path:            $rtc_path"
 echo_info "LL-MEC Path:             $llmec_path"
 echo_info "Jox Path:                $jox_path"
 echo_info "Store Path:              $store_path"
-echo_info "OAI agent_r Path:        $agent_r_path"
-echo_info "OAI agent_c Path:        $agent_c_path"
+echo_info "OAI oai_ran Path:        $oai_ran_path"
+echo_info "OAI oai_cn Path:        $oai_cn_path"
 
 
 os=$(grep "^ID=" /etc/os-release | sed "s/ID=//" | sed "s/\"//g")
@@ -296,27 +296,27 @@ build_rtc(){
     cp $rtc_bin $m5g_bin
     echo_success "Built FlexRAN RTC branch $rtc_branch in $m5g_bin"
 }
-build_agent_r(){
+build_oai_ran(){
 
-    git submodule update agent-r 
-    cd $agent_r_path
-    git checkout $agent_r_branch
-    cd $agent_r_build
+    git submodule update oai-ran 
+    cd $oai_ran_path
+    git checkout $oai_ran_branch
+    cd $oai_ran_build
     ./build_oai -I  -w USRP
     ./build_oai -c -C --eNB  -w USRP 
     cd $m5g_path
-    cp $agent_r_bin $m5g_bin
-    echo_success "Build FlexRAN Agent $agent_r_branch branch in $agent_r_bin"
+    cp $oai_ran_bin $m5g_bin
+    echo_success "Build OAI RAN $oai_ran_branch branch with FlexRAN agent in $oai_ran_bin"
 }
 
-build_agent_c(){
+build_oai_cn(){
 
-    git submodule update agent-c
-    cd $agent_c_path
-    git checkout $agent_c_branch
+    git submodule update oai-cn
+    cd $oai_cn_path
+    git checkout $oai_cn_branch
 
     cd $m5g_path
-    echo_success "Cloned ll-mec agent $agent_c_branch branch"
+    echo_success "Cloned OAI CN $oai_cn_branch branch with  ll-mec agent"
 }
 
 build_llmec(){
@@ -362,18 +362,18 @@ build_m5g (){
     build_llmec
     build_store
     build_jox
-    build_agent_r
-    build_agent_c
+    build_oai_ran
+    build_oai_cn
 }
 
 snap_rtc(){
     echo ''
 }
 
-snap_agent_r(){
+snap_oai_ran(){
     echo ''
 }
-snap_agent_c(){
+snap_oai_cn(){
     echo ''
 }
 snap_llmec(){
@@ -384,8 +384,8 @@ snap_llmec(){
 snap_m5g (){
  
     snap_rtc
-    snap_agent_r
-    snap_agent_c
+    snap_oai_ran
+    snap_oai_cn
     snap_llmec
 }
 
@@ -431,10 +431,10 @@ Options
    install required packages for build and/or snap process
 -I | --install-all-packages
    Install both required and developper/optional/useful pachages 
--c | --build-agent-c
-   Builds LL-MEC agent with OpenAirInterface from source
--C | --snap-agent-c
-   install LL-MEC agent with OpenAirInterface from snap
+-c | --build-oai-cn
+   Builds OAI CN with the LL-MEC agent from source
+-C | --snap-oai-cn
+   install OAI CN with the LL-MEC agent from snap
 -m | --build-m5g
    Builds all the Mosaic5G.io software plarforms from source 
 -M | --snap-m5g
@@ -449,10 +449,10 @@ Options
    Build FlexRAN realtime controller from source 
 -F | --snap-flexran
    Install FlexRAN realtime controller from snap 
--r | --build-agent-r
-   Builds FlexRAN agent with OpenAirInterface from source
--R | --snap-agent-r
-   install FlexRAN agent with OpenAirInterface from snap
+-r | --build-oai-ran
+   Builds OAI RAN with the FlexRAN agent from source
+-R | --snap-oai-ran
+   install OAI RAN with the FlexRAN agent from snap
 -s | --build-store
    Builds ans setup the store 
 -p | --pb-version
@@ -511,25 +511,25 @@ function main() {
 		SNAP_RTC=1
 		echo_info "Will install FlexRAN Realtime Controller (RTC) from snap"
 		shift;;
-	    -r | --build-agent-r)
-		BUILD_AGENT_R=1
-		echo_info "Will build FlexRAN Agent with OpenAirInterface RAN from source"
+	    -r | --build-oai-ran)
+		BUILD_OAI_RAN=1
+		echo_info "Will buildOAI RAN with the FlexRAN Agent from source"
 		shift;;
-	    -R | --snap-agent-r)
-		SNAP_AGENT_R=1
-		echo_info "Will install FlexRAN Agent with OpenAirInterface RAN from snap"
+	    -R | --snap-oai-ran)
+		SNAP_OAI_RAN=1
+		echo_info "Will install OAI CN with the FlexRAN Agent from snap"
 		shift;;
 	    -s | --build-store)
 		BUILD_STORE=1
 		echo_info "Will build Mosaic5G store" 
 		shift;;
-	    -c | --build-agent-c)
-		BUILD_AGENT_C=1
-		echo_info "Will build LL-MEC Agent with OpenAirInterface CN from source"
+	    -c | --build-oai-cn)
+		BUILD_OAI_CN=1
+		echo_info "Will build OAI CN with the LL-MEC Agent from source"
 		shift;;
-	    -C | --snap-agent-c)
-		SNAP_AGENT_C=1
-		echo_info "Will install LL-MEC Agent with OpenAirInterface CN from snap"
+	    -C | --snap-oai-cn)
+		SNAP_OAI_CN=1
+		echo_info "Will install OAI CN with the LL-MEC Agent from snap"
 		shift;;
 	    -p | --protobuf-version)
 		echo "setting protobuf version to $2" 
@@ -574,13 +574,13 @@ function main() {
 	    echo_info "Building FlexRAN realtime controller"
             build_rtc
 	fi
-	if [ "$BUILD_AGENT_R" = "1" ] ; then
-	    echo_info "Building FlexRAN Agent with OpenAirInterface RAN"
-            build_agent_r
+	if [ "$BUILD_OAI_RAN" = "1" ] ; then
+	    echo_info "Building OAI RAN with the FlexRAN Agent"
+            build_oai_ran
 	fi
-	if [ "$BUILD_AGENT_C" = "1" ] ; then
-	    echo_info "Building LL-MEC Agent with OpenAirInterface RAN"
-            build_agent_c
+	if [ "$BUILD_OAI_CN" = "1" ] ; then
+	    echo_info "Building OAI CN with the LL-MEC Agent"
+            build_oai_cn
 	fi
 	if [ "$BUILD_LLMEC" = "1" ] ; then
 	    echo_info "Building lowlatency MEC platforms"
@@ -604,15 +604,15 @@ function main() {
 	init_snap_m5g
 	if [ "$SNAP_RTC" = "1" ] ; then
 	    echo_info "Snap FlexRAN realtime controller"
-            snap_rtc
+        snap_rtc
 	fi
-	if [ "$SNAP_AGENT_R" = "1" ] ; then
-	    echo_info "Snap FlexRAN Agent with OpenAirInterface RAN"
-            snap_agent_r
+	if [ "$SNAP_OAI_RAN" = "1" ] ; then
+	    echo_info "Snap OAI RAN with the FlexRAN Agent"
+        snap_oai_ran
 	fi
-	if [ "$SNAP_AGENT_C" = "1" ] ; then
-	    echo_info "Snap FlexCN Agent with OpenAirInterface CN"
-            snap_agent_c
+	if [ "$SNAP_OAI_CN" = "1" ] ; then
+	    echo_info "Snap OAI CN with the LL-MEC Agent"
+            snap_oai_cn
 	fi
 	if [ "$SNAP_LLMEC" = "1" ] ; then
 	    echo_info "Snap lowlatency MEC platforms"
