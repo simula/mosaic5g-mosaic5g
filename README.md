@@ -22,15 +22,15 @@ submodules can be pulled. Follow the instructions below to get the modules and b
 
 1. Clone this repository:  `git clone http://gitlab.eurecom.fr/mosaic5g/mosaic5g.git`
 
-1. Check the help `./build_m5g -h `
-     
-    1. Build all the platforms 
-        * From Source: `./build_m5g -m `
-    1. Buil specific platform
-        * FlexRAN: `./build_m5g -f `
-        * LL-MEC: `./build_m5g -l `
-        * JOX: `./build_m5g -j `
-        * STORE: `./build_m5g -s `
+1. Build all the platforms 
+    * From Source: `./build_m5g -m `
+1. Buil specific platform
+    * FlexRAN: `./build_m5g -f `
+    * LL-MEC: `./build_m5g -l `
+    * JOX: `./build_m5g -j `
+    * STORE: `./build_m5g -s `
+1. Check the help of build_m5g:
+    * `./build_m5g -h `
 
 
-1. For manual operation, please have a look at the build_m5g script.
+For manual operation, please have a look at the build_m5g script.
