@@ -29,6 +29,8 @@ submodules can be pulled. Follow the instructions below to get the modules and b
     * LL-MEC: `./build_m5g -l `
     * JOX: `./build_m5g -j `
     * STORE: `./build_m5g -s `
+    * OAI-RAN: `./build_m5g -r `
+    * OAI-CN: `./build_m5g -c `
 1. Check the help of build_m5g:
     * `./build_m5g -h `
 
