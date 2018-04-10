@@ -81,6 +81,7 @@ oai_ran_bin=$oai_ran_path/targets/bin
 oai_ran_branch=develop
 
 oai_cn_path=$m5g_path/oai-cn
+oai_cn_build=$oai_cn_path/scripts
 oai_cn_exec=$oai_cn_path/build
 oai_cn_exec_name=''
 oai_cn_branch=openair-cn-llmec
@@ -314,7 +315,16 @@ build_oai_cn(){
     git submodule update oai-cn
     cd $oai_cn_path
     git checkout $oai_cn_branch
+    cd $oai_cn_build
+    ./build_hss -i -F -e
+    ./build_hss 
 
+    ./build_spgw -i -f
+    ./build_spgw
+
+    ./build_mme -i -f
+    ./build_mme
+    
     cd $m5g_path
     echo_success "Cloned OAI CN $oai_cn_branch branch with  ll-mec agent"
 }
