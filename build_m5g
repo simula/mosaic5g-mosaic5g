@@ -377,17 +377,21 @@ build_m5g (){
 }
 
 snap_rtc(){
-    echo ''
+    echo 'Snapping FLEXRAN '
+    sudo snap install flexran --channel=beta --devmode
 }
 
 snap_oai_ran(){
-    echo ''
+    echo 'Snapping OAI-RAN '
+    sudo snap install oai-ran --channel=beta --devmode
 }
 snap_oai_cn(){
-    echo ''
+    echo 'Snapping OAI-CN '
+    sudo snap install oai-cn --channel=beta --devmode
 }
 snap_llmec(){
-    echo ''
+    echo 'Snapping LL-MEC'
+    sudo snap install ll-mec --channel=beta --devmode
 }
 
     
@@ -395,9 +399,10 @@ snap_m5g (){
  
     snap_rtc
     snap_oai_ran
-    snap_oai_cn
+
     snap_llmec
-}
+    snap_oai_cn
+ }
 
 init_snap_m5g(){
     echo ''
