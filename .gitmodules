@@ -22,5 +22,5 @@
 	url = https://gitlab.eurecom.fr/oai/openair-cn.git
 	branch = openair-cn-llmec
 [submodule "ll-mec-ovs"]
-	path = ll-mec-ovs
+	path = ovs-gtp
 	url = https://gitlab.eurecom.fr/mosaic5g/ll-mec-ovs.git

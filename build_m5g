@@ -96,6 +96,10 @@ llmec_path=$m5g_path/ll-mec
 llmec_branch=develop
 llmec_bin=$llmec_path/ll-mec
 
+ovs_path=$m5g_path/ll-mec-ovs
+ovs_branch=master
+#ovs_bin=$ovs_path/ll-mec-
+
 store_path=$m5g_path/store
 store_sdk=$m5g_path/store/sdk
 store_branch=develop
@@ -103,6 +107,7 @@ store_branch=develop
 echo_info "Mosaic5G Path:           $m5g_path"
 echo_info "FlexRAN Path:            $rtc_path"
 echo_info "LL-MEC Path:             $llmec_path"
+echo_info "OVS Path:                $ovs_path"
 echo_info "Jox Path:                $jox_path"
 echo_info "Store Path:              $store_path"
 echo_info "OAI oai_ran Path:        $oai_ran_path"
@@ -341,6 +346,18 @@ build_llmec(){
     echo_success "Built LL-MEC $llmec_branch branch in $llmec_bin"
 }
 
+build_ovs_gtp(){
+
+    git submodule update ll-mec-ovs
+    cd $ovs_path
+    git checkout $ovs_branch
+    cd ll-mec-ovs/ovs_kernel_gtp
+    sudo ./install.sh 
+    cd $m5g_path
+    # insert the module and check for GTP
+    echo_success "Built OVS $ovs_branch branch"
+}
+
 build_store(){
 
     git submodule update store 
@@ -368,12 +385,18 @@ build_jox(){
 
 build_m5g (){
  
+    #EDGE nodes
+    build_oai_ran
     build_rtc
+
+    #CORE nodes
+    build_oai_cn
     build_llmec
+    build_ovs_gtp
+    
+    #Control apps and Orch
     build_store
     build_jox
-    build_oai_ran
-    build_oai_cn
 }
 
 snap_rtc(){
@@ -393,7 +416,10 @@ snap_llmec(){
     echo 'Snapping LL-MEC'
     sudo snap install ll-mec --channel=beta --devmode
 }
-
+snap_ovs_gtp(){
+    echo 'Snapping OVS-GTP'
+    sudo snap install ovs-gtp --channel=beta --devmode
+}
     
 snap_m5g (){
  
@@ -401,6 +427,7 @@ snap_m5g (){
     snap_oai_ran
 
     snap_llmec
+    snap_ovs_gtp
     snap_oai_cn
  }
 
@@ -464,6 +491,10 @@ Options
    Build FlexRAN realtime controller from source 
 -F | --snap-flexran
    Install FlexRAN realtime controller from snap 
+-o | --build-ovs-gtp
+   Build OVS with GTP support in the kernel space from source 
+-O | --snap-ovs-gtp
+   Install OVS with GTP support from snap 
 -r | --build-oai-ran
    Builds OAI RAN with the FlexRAN agent from source
 -R | --snap-oai-ran
@@ -525,6 +556,14 @@ function main() {
 	    -F | --snap-flexran)
 		SNAP_RTC=1
 		echo_info "Will install FlexRAN Realtime Controller (RTC) from snap"
+		shift;;
+	    -o | --build-ovs-gtp)
+		BUILD_OVS_GTP=1
+		echo_info "Will build OVS with GTP support in the kernel space from source"
+		shift;;
+	    -O | --snap-ovs-gtp)
+		SNAP_OVS_GTP=1
+		echo_info "Will install OVS with GTP from snap"
 		shift;;
 	    -r | --build-oai-ran)
 		BUILD_OAI_RAN=1
@@ -601,6 +640,10 @@ function main() {
 	    echo_info "Building lowlatency MEC platforms"
             build_llmec
 	fi
+	if [ "$BUILD_OVS_GTP" = "1" ] ; then
+	    echo_info "Building OVS with GTP"
+            build_ovs_gtp
+	fi
 	if [ "$BUILD_JOX" = "1" ] ; then
 	    echo_info "Building JOX orchestrator"
             build_jox
@@ -632,6 +675,10 @@ function main() {
 	if [ "$SNAP_LLMEC" = "1" ] ; then
 	    echo_info "Snap lowlatency MEC platforms"
             snap_llmec
+	fi
+	if [ "$SNAP_OVS_GTP" = "1" ] ; then
+	    echo_info "Snap OVS with GTP"
+            snap_ovs_gtp
 	fi
     fi
     
