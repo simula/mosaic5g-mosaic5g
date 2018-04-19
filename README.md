@@ -14,7 +14,7 @@ This repository is designed to serve as a meta repository from where each
 submodules can be pulled. Follow the instructions below to get the modules and build your platform.
 
 
-1. Read, sign, and send the [terms of use]()
+1  Read, sign, and send the [terms of use]()
 
 1. Create a gitlab account at [gitlab.eurecom.fr](http://gitlab.eurecom.fr) page, and follow the instructions to create a user acount.
 
@@ -22,15 +22,18 @@ submodules can be pulled. Follow the instructions below to get the modules and b
 
 1. Clone this repository:  `git clone http://gitlab.eurecom.fr/mosaic5g/mosaic5g.git`
 
-1. Build all the platforms 
+1. Build all the platforms from source or Snap  
     * From Source: `./build_m5g -m `
-1. Buil specific platform
-    * FlexRAN: `./build_m5g -f `
-    * LL-MEC: `./build_m5g -l `
+    * From Snap:   `./build_m5g -M `
+
+1. Buil specific platform from source or Snap
+    * FlexRAN: `./build_m5g -f ` or `./build_m5g -F `
+    * LL-MEC: `./build_m5g -l `  or `./build_m5g -L `
     * JOX: `./build_m5g -j `
     * STORE: `./build_m5g -s `
-    * OAI-RAN: `./build_m5g -r `
-    * OAI-CN: `./build_m5g -c `
+    * OAI-RAN: `./build_m5g -r `  or `./build_m5g -R `
+    * OAI-CN: `./build_m5g -c `  or `./build_m5g -C `
+
 1. Check the help of build_m5g:
     * `./build_m5g -h `
 
