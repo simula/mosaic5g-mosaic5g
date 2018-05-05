@@ -401,24 +401,80 @@ build_m5g (){
 
 snap_rtc(){
     echo 'Snapping FLEXRAN '
-    sudo snap install flexran --channel=beta --devmode
+    snap list flexran &> /dev/null
+    if [ $? -eq 0 ]; then
+	op="refresh"
+    else
+	op="install"
+    fi
+    echo "$op FlexRAN snap"
+    sudo snap $op flexran --channel=beta --devmode
+    echo "-----------------------------------"
+    echo "         FLEXRAN SNAP INFO         "
+    echo "-----------------------------------"
+    
+    snap info flexran
 }
 
 snap_oai_ran(){
     echo 'Snapping OAI-RAN '
-    sudo snap install oai-ran --channel=beta --devmode
+    snap list oai-ran &> /dev/null
+    if [ $? -eq 0 ]; then
+	op="refresh"
+    else
+	op="install"
+    fi
+    echo "$op OAI-RAN snap"
+    sudo snap $op oai-ran --channel=beta --devmode
+    echo "-----------------------------------"
+    echo "         OAI-RAN SNAP INFO         "
+    echo "-----------------------------------"
+    snap info oai-ran
 }
 snap_oai_cn(){
     echo 'Snapping OAI-CN '
-    sudo snap install oai-cn --channel=beta --devmode
+    snap list oai-cn &> /dev/null
+    if [ $? -eq 0 ]; then
+	op="refresh"
+    else
+	op="install"
+    fi
+    echo "$op OAI-CN snap"
+    sudo snap $op oai-cn --channel=beta --devmode
+    echo "-----------------------------------"
+    echo "          OAI-CN SNAP INFO         "
+    echo "-----------------------------------"
+    snap info oai-cn
 }
 snap_llmec(){
     echo 'Snapping LL-MEC'
-    sudo snap install ll-mec --channel=beta --devmode
+    snap list ll-mec &> /dev/null
+    if [ $? -eq 0 ]; then
+	op="refresh"
+    else
+	op="install"
+    fi
+    echo "$op LL-MEC snap"
+    sudo snap $op ll-mec --channel=beta --devmode
+    echo "-----------------------------------"
+    echo "          LL-MEC SNAP INFO         "
+    echo "-----------------------------------"
+    snap info ll-mec
 }
 snap_ovs_gtp(){
     echo 'Snapping OVS-GTP'
-    sudo snap install ovs-gtp --channel=beta --devmode
+    snap list ovs-gtp &> /dev/null
+    if [ $? -eq 0 ]; then
+	op="refresh"
+    else
+	op="install"
+    fi
+    echo "$op OVS-GTP snap"
+    sudo snap $op ovs-gtp --channel=beta --devmode
+    echo "-----------------------------------"
+    echo "          OVS-GTP SNAP INFO         "
+    echo "-----------------------------------"
+    snap info ovs-gtp
 }
     
 snap_m5g (){
@@ -447,6 +503,13 @@ init_build_m5g(){
 ############################
 # Clean all
 ###########################
+
+clean_snaps(){
+    sudo snap remove oai-cn
+    sudo snap remove oai-ran
+    sudo snap remove flexran
+    sudo snap remove ll-mec
+}
 
 clean_all(){
     echo_info "cleaning "
@@ -527,7 +590,7 @@ function main() {
 		shift;;
 	    -I | --install-optional-packages)
 		INSTALL_OPTIONAL=1
-		echo_info "Will install optional packages"
+		echo_info "Will install optional/useful packages"
 		shift;;
 	    -m | --build-m5g)
 		BUILD_M5G=1
@@ -535,7 +598,7 @@ function main() {
 		shift;;
 	    -M | --snap-m5g)
 		SNAP_M5G=1
-		echo_info "Will install mosaic5G.io platforms from snap"
+		echo_info "Will install mosaic5G.io platforms from snaps"
 		shift;;
 	    -j | --build-jox)
 		BUILD_JOX=1
@@ -571,7 +634,7 @@ function main() {
 		shift;;
 	    -R | --snap-oai-ran)
 		SNAP_OAI_RAN=1
-		echo_info "Will install OAI CN with the FlexRAN Agent from snap"
+		echo_info "Will install OAI RAN with the FlexRAN Agent from snap"
 		shift;;
 	    -s | --build-store)
 		BUILD_STORE=1
