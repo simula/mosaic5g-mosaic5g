@@ -96,7 +96,7 @@ llmec_path=$m5g_path/ll-mec
 llmec_branch=develop
 llmec_bin=$llmec_path/ll-mec
 
-ovs_path=$m5g_path/ll-mec-ovs
+ovs_path=$m5g_path/ovs-gtp
 ovs_branch=master
 #ovs_bin=$ovs_path/ll-mec-
 
@@ -206,7 +206,8 @@ install_required_packages(){
 	  nodejs-legacy \
 	  npm \
 	  curl 
-    
+    	  
+
     install_python_packages
     install_npm_packages
 }
@@ -260,7 +261,8 @@ install_optional_packages (){
 	  iptables \
 	  meld    \
 	  gitk \
-	  openssh-server 
+	  openssh-server \
+	  screen 
 	         
 }
 
@@ -348,10 +350,11 @@ build_llmec(){
 
 build_ovs_gtp(){
 
-    git submodule update ll-mec-ovs
+    git submodule update ovs-gtp
     cd $ovs_path
     git checkout $ovs_branch
-    cd ll-mec-ovs/ovs_kernel_gtp
+    cd ovs_kernel_gtp
+    echo `pwd`
     sudo ./install.sh 
     cd $m5g_path
     # insert the module and check for GTP
