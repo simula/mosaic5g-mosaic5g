@@ -73,7 +73,7 @@ mkdir -p $m5g_bin
 
 rtc_path=$m5g_path/flexran
 rtc_bin=$rtc_path/build/rt_controller
-rtc_branch=develop-uplink
+rtc_branch=master
 
 oai_ran_path=$m5g_path/oai-ran
 oai_ran_build=$oai_ran_path/cmake_targets
