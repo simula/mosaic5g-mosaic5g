@@ -141,6 +141,7 @@ check_supported_os_dist() {
 }
 pb_version=3
 
+snap_revision=""
 ################################
 # Function to killall the subprocesses when Ctrl-C Key is hit
 ###############################
@@ -410,7 +411,10 @@ snap_rtc(){
     else
 	op="install"
     fi
-    echo "$op FlexRAN snap"
+    if [ "$snap_revision" != "" ]; then
+	op="$op --revision=$snap_revision"
+    fi
+    echo "snap $op flexran --channel=beta --devmode"
     sudo snap $op flexran --channel=beta --devmode
     echo "-----------------------------------"
     echo "         FLEXRAN SNAP INFO         "
@@ -427,7 +431,11 @@ snap_oai_ran(){
     else
 	op="install"
     fi
-    echo "$op OAI-RAN snap"
+    if [ "$snap_revision" != "" ]; then
+	op="$op --revision=$snap_revision"
+    fi
+   
+    echo "snap $op oai-ran --channel=beta --devmode"
     sudo snap $op oai-ran --channel=beta --devmode
     echo "-----------------------------------"
     echo "         OAI-RAN SNAP INFO         "
@@ -443,6 +451,11 @@ snap_oai_cn(){
 	op="install"
     fi
     echo "$op OAI-CN snap"
+    if [ "$snap_revision" != "" ]; then
+	op="$op --revision=$snap_revision"
+    fi
+    
+    echo "snap $op oai-cn --channel=beta --devmode"
     sudo snap $op oai-cn --channel=beta --devmode
     echo "-----------------------------------"
     echo "          OAI-CN SNAP INFO         "
@@ -457,7 +470,11 @@ snap_llmec(){
     else
 	op="install"
     fi
-    echo "$op LL-MEC snap"
+    if [ "$snap_revision" != "" ]; then
+	op="$op --revision=$snap_revision"
+    fi
+    
+    echo "snap $op ll-mec --channel=beta --devmode"
     sudo snap $op ll-mec --channel=beta --devmode
     echo "-----------------------------------"
     echo "          LL-MEC SNAP INFO         "
@@ -472,14 +489,38 @@ snap_ovs_gtp(){
     else
 	op="install"
     fi
-    echo "$op OVS-GTP snap"
+    if [ "$snap_revision" != "" ]; then
+	op="$op --revision=$snap_revision"
+    fi
+    echo "snap $op ovs-gtp --channel=beta --devmode"
     sudo snap $op ovs-gtp --channel=beta --devmode
     echo "-----------------------------------"
     echo "          OVS-GTP SNAP INFO         "
     echo "-----------------------------------"
     snap info ovs-gtp
 }
+ 
+snap_oai_tracer(){
+    echo 'Snapping OAI-TRACER '
+    snap list oai-tracer &> /dev/null
+    if [ $? -eq 0 ]; then
+	op="refresh"
+    else
+	op="install"
+    fi
+    echo "$op OAI-TRACER snap"
+    if [ "$snap_revision" != "" ]; then
+	op="$op --revision=$snap_revision"
+    fi
     
+    echo "snap $op oai-tracer --channel=beta --devmode"
+    sudo snap $op oai-tracer --channel=beta --devmode
+    echo "-----------------------------------"
+    echo "          OAI-TRACER SNAP INFO         "
+    echo "-----------------------------------"
+    snap info oai-tracer
+}
+
 snap_m5g (){
  
     snap_rtc
@@ -567,8 +608,12 @@ Options
    install OAI RAN with the FlexRAN agent from snap
 -s | --build-store
    Builds ans setup the store 
+-v | --revision 
+   Install specific revision of the snap. You must have developer access.
 -p | --pb-version
    Set the protobuf version for FlexRAN RTC. Valid options 2 and 3.
+-T | --snap-tracer
+   Install OAI tracer from Snap
 Usage:
 - build_m5g -i -m : insatll all the sanps and run 
 - build_m5g -i -j
@@ -655,6 +700,14 @@ function main() {
 		echo "setting protobuf version to $2" 
 		pb_version=$2
 		shift 2;;
+	    -v | --revision )
+		echo "setting snap revision is set to $2" 
+		snap_revision=$2
+		shift 2;;
+	    -T | --snap-tracer )
+		echo "Will install OAI Tracer from snap" 
+		SNAP_OAI_TRACER=1
+		shift ;;
 	    -h | --help)
 		print_help
 		exit 1;;
@@ -745,6 +798,10 @@ function main() {
 	if [ "$SNAP_OVS_GTP" = "1" ] ; then
 	    echo_info "Snap OVS with GTP"
             snap_ovs_gtp
+	fi
+	if [ "$SNAP_OAI_TRACER" = "1" ] ; then
+	    echo_info "Snap OAI Tracer"
+            snap_oai_tracer
 	fi
     fi
     
