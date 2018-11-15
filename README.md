@@ -18,7 +18,7 @@ submodules can be pulled. Follow the instructions below to get the modules and b
 
 1. Create a gitlab account at [gitlab.eurecom.fr](http://gitlab.eurecom.fr) page, and follow the instructions to create a user acount.
 
-1. Subscribe to [**Mosaic5G**](mailto:mosaic5g_users@lists.eurecom.fr) by clicking at [subscribe](mailto:mosaic5g_users@lists.eurecom.fr?subject=subscribe mosaic5g_users YourGitAccount YourFirstName YourLastName) and replace the following placeholders "YourGitAccount" "YourFirstName" "YourLastName"
+1. Subscribe to [**Mosaic5G**](mailto:mosaic5g_users@lists.eurecom.fr) by clicking at [subscribe](mailto:mosaic5g_users@lists.eurecom.fr%3fsubject=subscribe mosaic5g_users YourGitAccount YourFirstName YourLastName) and replace the following placeholders "YourGitAccount" "YourFirstName" "YourLastName"
 
 1. Clone this repository:  `git clone http://gitlab.eurecom.fr/mosaic5g/mosaic5g.git`
 
@@ -26,7 +26,7 @@ submodules can be pulled. Follow the instructions below to get the modules and b
     * From Source: `./build_m5g -m `
     * From Snap:   `./build_m5g -M `
 
-1. Buil specific platform from source or Snap
+1. Build specific platform from source (lowercase option letter) or Snap (uppercase option letter, when available)
     * FlexRAN: `./build_m5g -f ` or `./build_m5g -F `
     * LL-MEC: `./build_m5g -l `  or `./build_m5g -L `
     * JOX: `./build_m5g -j `
