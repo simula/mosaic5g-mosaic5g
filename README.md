@@ -18,7 +18,7 @@ submodules can be pulled. Follow the instructions below to get the modules and b
 
 1. Create a gitlab account at [gitlab.eurecom.fr](http://gitlab.eurecom.fr) page, and follow the instructions to create a user acount.
 
-1. Subscribe to [**Mosaic5G**](mailto:mosaic5g_users@lists.eurecom.fr) by clicking at [subscribe](mailto:mosaic5g_users@lists.eurecom.fr%3fsubject=subscribe mosaic5g_users YourGitAccount YourFirstName YourLastName) and replace the following placeholders "YourGitAccount" "YourFirstName" "YourLastName"
+1. Subscribe to [**Mosaic5G**](mailto:mosaic5g_users@lists.eurecom.fr) by clicking at [subscribe](mailto:mosaic5g_users@lists.eurecom.fr?subject=subscribe%20mosaic5g_users%20YourGitAccount%20YourFirstName%20YourLastName) and replace the following placeholders "YourGitAccount" "YourFirstName" "YourLastName"
 
 1. Clone this repository:  `git clone http://gitlab.eurecom.fr/mosaic5g/mosaic5g.git`
 
