@@ -228,6 +228,7 @@ install_python_packages(){
     $SUDO pip install tornado
     $SUDO pip install enum
     $SUDO pip install requests
+    $SUDO pip install flask
     
 }
 
@@ -279,6 +280,40 @@ install_optional_packages (){
 #######################################
 # install and build mosaic5G.io platforms 
 #######################################
+install_ovs_kernel(){
+    echo "installing the kernel 4.9.x"
+    cd /tmp
+    
+    wget http://kernel.ubuntu.com/~kernel-ppa/mainline/v4.9/linux-headers-4.9.0-040900_4.9.0-040900.201612111631_all.deb
+    
+    wget http://kernel.ubuntu.com/~kernel-ppa/mainline/v4.9/linux-headers-4.9.0-040900-generic_4.9.0-040900.201612111631_amd64.deb
+    
+    wget http://kernel.ubuntu.com/~kernel-ppa/mainline/v4.9/linux-image-4.9.0-040900-generic_4.9.0-040900.201612111631_amd64.deb
+    
+    sudo dpkg -i *.deb
+
+    cd -  
+}
+
+check_current_kernel(){
+
+    required_kern_version="4.9.0-040900-generic"
+    required_kern_major=`echo $required_kern_version | cut -d '.' -f1`
+    required_kern_minor=`echo $required_kern_version | cut -d '.' -f2`
+
+    current_kern_release=`uname -r`
+    current_kern_major=`echo $current_kern_release | cut -d '.' -f1`
+    current_kern_minor=`echo $current_kern_release | cut -d '.' -f2`
+    
+    if [ $current_kern_major -eq $required_kern_major ] && [ $current_kern_minor -eq $required_kern_minor ]; then
+	REQUIRED_KERNEL_IS_INSTALLED="true"
+    else
+	REQUIRED_KERNEL_IS_INSTALLED="false"
+    fi
+    
+}
+
+
 build_rtc(){
 
     git submodule update flexran
@@ -374,11 +409,32 @@ build_ovs_gtp(){
     cd $ovs_path
     git checkout $ovs_branch
     cd ovs_kernel_gtp
-    echo `pwd`
-    sudo ./install.sh 
-    cd $m5g_path
+
+    check_current_kernel
+    if [[ $REQUIRED_KERNEL_IS_INSTALLED == false ]]; then
+	echo "You haven't installed kernel 4.9. Do you want to install it now?"
+	echo -n 'y/n:'
+	read install_kernel
+
+	if [ "$install_kernel" == "y" ] ; then 
+	    install_ovs_kernel
+	    echo_info "You need to reboot"
+	else
+	    echo_info "You need to install kernel 4.9 to proceed with the installation of ovs-gtp"
+	    exit 0 
+	fi
+    else
+	echo_info "Required kernel is installed"
+    fi
+    sudo ./install.sh
+
+    cd $ovs_path
+    
+    echo_info "Now, it is the time to set the config file so that you can run ovs-gtp"
+
+    #cd $m5g_path
     # insert the module and check for GTP
-    echo_success "Built OVS $ovs_branch branch"
+    #echo_success "Built OVS $ovs_branch branch"
 }
 
 build_store(){
@@ -400,8 +456,11 @@ build_jox(){
     git submodule update jox
     cd $jox_path
     git checkout $jox_branch
-    source ./joxenv
-    echo_info "./scripts/build_jox"
+    #source ./joxenv
+    echo_info "building JoX"
+    ./script/build_jox -i
+    ./script/build_jox -x
+    
     cd -
     echo_success "Cloned JoX $jox_branch branch"
 }
