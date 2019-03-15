@@ -411,7 +411,7 @@ build_ovs_gtp(){
     cd ovs_kernel_gtp
 
     check_current_kernel
-    if [[ $REQUIRED_KERNEL_IS_INSTALLED == false ]]; then
+    if [ "$REQUIRED_KERNEL_IS_INSTALLED" == "false" ]; then
 	echo "You haven't installed kernel 4.9. Do you want to install it now?"
 	echo -n 'y/n:'
 	read install_kernel
@@ -421,8 +421,8 @@ build_ovs_gtp(){
 	    echo_info "You need to reboot"
 	else
 	    echo_info "You need to install kernel 4.9 to proceed with the installation of ovs-gtp"
-	    exit 0 
 	fi
+	exit 0
     else
 	echo_info "Required kernel is installed"
     fi
