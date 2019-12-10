@@ -136,6 +136,7 @@ esac
 
 check_supported_os_dist() {
     case "$os_dist" in
+        "ubuntu18.04") return 0 ;;
         "ubuntu17.10") return 0 ;;
         "ubuntu17.04") return 0 ;;
         "ubuntu16.04") return 0 ;;
@@ -200,24 +201,35 @@ install_required_packages(){
     fi
     
     $SUDO $os_pm  update -y
-    $SUDO $os_pm install -y \
-	  virt-what \
-          snapcraft \
-	  build-essential \
-	  python-dev  \
-	  python-pexpect \
-	  python-pip  \
-	  python-yaml \
-	  libyaml-dev  \
-	  python-tk    \
-	  doxygen     \
-	  nodejs-legacy \
-	  npm \
-	  curl 
-    	  
+	$SUDO $os_pm install -y \
+	      virt-what \
+              build-essential \
+	      python-dev  \
+	      python-pexpect \
+	      python-pip  \
+	      python-yaml \
+	      libyaml-dev  \
+	      python-tk    \
+	      doxygen     \
+	      npm \
+	      curl \
+	      jq 
+        #snapcraft \
+       
+    if [ "$os_dist" == "ubuntu18.04" ] ; then
+	$SUDO $os_pm install -y \
+	      nodejs
+    else
+	$SUDO $os_pm install -y \
+	      nodejs-legacy
+    fi
 
     install_python_packages
     install_npm_packages
+
+    $SUDO snap install snapcraft --classic
+    #$SUDO snap install snapcraft --classic
+    
 }
 
 install_python_packages(){
