@@ -73,12 +73,18 @@ mkdir -p $m5g_bin
 
 rtc_path=$m5g_path/flexran
 rtc_bin=$rtc_path/build/rt_controller
-rtc_branch=develop-uplink
+rtc_branch=master
 
 oai_ran_path=$m5g_path/oai-ran
 oai_ran_build=$oai_ran_path/cmake_targets
 oai_ran_bin=$oai_ran_path/targets/bin
 oai_ran_branch=develop
+
+oai_ue_path=$m5g_path/oai-ue
+oai_ue_build=$oai_ue_path/cmake_targets
+oai_ue_bin=$oai_ue_path/targets/bin
+oai_ue_branch=develop
+
 
 oai_cn_path=$m5g_path/oai-cn
 oai_cn_build=$oai_cn_path/scripts
@@ -111,7 +117,8 @@ echo_info "OVS Path:                $ovs_path"
 echo_info "Jox Path:                $jox_path"
 echo_info "Store Path:              $store_path"
 echo_info "OAI oai_ran Path:        $oai_ran_path"
-echo_info "OAI oai_cn Path:        $oai_cn_path"
+echo_info "OAI oai_ue Path:         $oai_ue_path"
+echo_info "OAI oai_cn Path:         $oai_cn_path"
 
 
 os=$(grep "^ID=" /etc/os-release | sed "s/ID=//" | sed "s/\"//g")
@@ -141,6 +148,7 @@ check_supported_os_dist() {
 }
 pb_version=3
 
+snap_revision=""
 ################################
 # Function to killall the subprocesses when Ctrl-C Key is hit
 ###############################
@@ -218,6 +226,7 @@ install_python_packages(){
     $SUDO pip install tornado
     $SUDO pip install enum
     $SUDO pip install requests
+    $SUDO pip install flask
     
 }
 
@@ -269,6 +278,40 @@ install_optional_packages (){
 #######################################
 # install and build mosaic5G.io platforms 
 #######################################
+install_ovs_kernel(){
+    echo "installing the kernel 4.9.x"
+    cd /tmp
+    
+    wget http://kernel.ubuntu.com/~kernel-ppa/mainline/v4.9/linux-headers-4.9.0-040900_4.9.0-040900.201612111631_all.deb
+    
+    wget http://kernel.ubuntu.com/~kernel-ppa/mainline/v4.9/linux-headers-4.9.0-040900-generic_4.9.0-040900.201612111631_amd64.deb
+    
+    wget http://kernel.ubuntu.com/~kernel-ppa/mainline/v4.9/linux-image-4.9.0-040900-generic_4.9.0-040900.201612111631_amd64.deb
+    
+    sudo dpkg -i *.deb
+
+    cd -  
+}
+
+check_current_kernel(){
+
+    required_kern_version="4.9.0-040900-generic"
+    required_kern_major=`echo $required_kern_version | cut -d '.' -f1`
+    required_kern_minor=`echo $required_kern_version | cut -d '.' -f2`
+
+    current_kern_release=`uname -r`
+    current_kern_major=`echo $current_kern_release | cut -d '.' -f1`
+    current_kern_minor=`echo $current_kern_release | cut -d '.' -f2`
+    
+    if [ $current_kern_major -eq $required_kern_major ] && [ $current_kern_minor -eq $required_kern_minor ]; then
+	REQUIRED_KERNEL_IS_INSTALLED="true"
+    else
+	REQUIRED_KERNEL_IS_INSTALLED="false"
+    fi
+    
+}
+
+
 build_rtc(){
 
     git submodule update flexran
@@ -314,6 +357,18 @@ build_oai_ran(){
     cp $oai_ran_bin $m5g_bin
     echo_success "Build OAI RAN $oai_ran_branch branch with FlexRAN agent in $oai_ran_bin"
 }
+build_oai_ue(){
+
+    git submodule update oai-ue 
+    cd $oai_ue_path
+    git checkout $oai_ue_branch
+    cd $oai_ue_build
+    ./build_oai -I  -w USRP
+    ./build_oai -c -C --UE  -w USRP 
+    cd $m5g_path
+    cp $oai_ue_bin $m5g_bin
+    echo_success "Build OAI UE $oai_ue_branch branch in $oai_ue_bin"
+}
 
 build_oai_cn(){
 
@@ -352,11 +407,32 @@ build_ovs_gtp(){
     cd $ovs_path
     git checkout $ovs_branch
     cd ovs_kernel_gtp
-    echo `pwd`
-    sudo ./install.sh 
-    cd $m5g_path
+
+    check_current_kernel
+    if [ "$REQUIRED_KERNEL_IS_INSTALLED" == "false" ]; then
+	echo "You haven't installed kernel 4.9. Do you want to install it now?"
+	echo -n 'y/n:'
+	read install_kernel
+
+	if [ "$install_kernel" == "y" ] ; then 
+	    install_ovs_kernel
+	    echo_info "You need to reboot"
+	else
+	    echo_info "You need to install kernel 4.9 to proceed with the installation of ovs-gtp"
+	fi
+	exit 0
+    else
+	echo_info "Required kernel is installed"
+    fi
+    sudo ./install.sh
+
+    cd $ovs_path
+    
+    echo_info "Now, it is the time to set the config file so that you can run ovs-gtp"
+
+    #cd $m5g_path
     # insert the module and check for GTP
-    echo_success "Built OVS $ovs_branch branch"
+    #echo_success "Built OVS $ovs_branch branch"
 }
 
 build_store(){
@@ -378,8 +454,11 @@ build_jox(){
     git submodule update jox
     cd $jox_path
     git checkout $jox_branch
-    source ./joxenv
-    echo_info "./scripts/build_jox"
+    #source ./joxenv
+    echo_info "building JoX"
+    ./script/build_jox -i
+    ./script/build_jox -x
+    
     cd -
     echo_success "Cloned JoX $jox_branch branch"
 }
@@ -388,6 +467,7 @@ build_m5g (){
  
     #EDGE nodes
     build_oai_ran
+    build_oai_ue
     build_rtc
 
     #CORE nodes
@@ -400,96 +480,43 @@ build_m5g (){
     build_jox
 }
 
-snap_rtc(){
-    echo 'Snapping FLEXRAN '
-    snap list flexran &> /dev/null
+snap_m5g_module(){
+    echo "Snapping $1"
+    snap list $1 &> /dev/null
     if [ $? -eq 0 ]; then
 	op="refresh"
     else
 	op="install"
     fi
-    echo "$op FlexRAN snap"
-    sudo snap $op flexran --channel=beta --devmode
+    if [ "$snap_revision" != "" ]; then
+	op="$op --revision=$snap_revision"
+    fi
+    echo "snap $op $1 --channel=edge --devmode"
+    sudo snap $op $1 --channel=edge --devmode
     echo "-----------------------------------"
-    echo "         FLEXRAN SNAP INFO         "
+    echo "         $1 SNAP INFO         "
     echo "-----------------------------------"
     
-    snap info flexran
+    snap info $1
 }
 
-snap_oai_ran(){
-    echo 'Snapping OAI-RAN '
-    snap list oai-ran &> /dev/null
-    if [ $? -eq 0 ]; then
-	op="refresh"
-    else
-	op="install"
-    fi
-    echo "$op OAI-RAN snap"
-    sudo snap $op oai-ran --channel=beta --devmode
-    echo "-----------------------------------"
-    echo "         OAI-RAN SNAP INFO         "
-    echo "-----------------------------------"
-    snap info oai-ran
-}
-snap_oai_cn(){
-    echo 'Snapping OAI-CN '
-    snap list oai-cn &> /dev/null
-    if [ $? -eq 0 ]; then
-	op="refresh"
-    else
-	op="install"
-    fi
-    echo "$op OAI-CN snap"
-    sudo snap $op oai-cn --channel=beta --devmode
-    echo "-----------------------------------"
-    echo "          OAI-CN SNAP INFO         "
-    echo "-----------------------------------"
-    snap info oai-cn
-}
-snap_llmec(){
-    echo 'Snapping LL-MEC'
-    snap list ll-mec &> /dev/null
-    if [ $? -eq 0 ]; then
-	op="refresh"
-    else
-	op="install"
-    fi
-    echo "$op LL-MEC snap"
-    sudo snap $op ll-mec --channel=beta --devmode
-    echo "-----------------------------------"
-    echo "          LL-MEC SNAP INFO         "
-    echo "-----------------------------------"
-    snap info ll-mec
-}
-snap_ovs_gtp(){
-    echo 'Snapping OVS-GTP'
-    snap list ovs-gtp &> /dev/null
-    if [ $? -eq 0 ]; then
-	op="refresh"
-    else
-	op="install"
-    fi
-    echo "$op OVS-GTP snap"
-    sudo snap $op ovs-gtp --channel=beta --devmode
-    echo "-----------------------------------"
-    echo "          OVS-GTP SNAP INFO         "
-    echo "-----------------------------------"
-    snap info ovs-gtp
-}
-    
-snap_m5g (){
+declare -a snaps=("oai-cn" "oai-ran" "oai-ue" "oai-tracer" "flexran" "ll-mec")
  
-    snap_rtc
-    snap_oai_ran
-
-    snap_llmec
-    snap_ovs_gtp
-    snap_oai_cn
- }
+snap_m5g (){
+    for s in "${snaps[@]}"
+    do
+	snap_m5g_module $s
+    done
+    echo""
+    echo "-------------------------------------"
+    echo "     Listing the installed snaps     "
+    echo "-------------------------------------"
+    echo ""
+    snap list 
+}
 
 init_snap_m5g(){
-    echo ''
+    echo ""
     
 }
 
@@ -506,14 +533,27 @@ init_build_m5g(){
 ###########################
 
 clean_snaps(){
-    sudo snap remove oai-cn
-    sudo snap remove oai-ran
-    sudo snap remove flexran
-    sudo snap remove ll-mec
+
+    if [ "$snap_revision" != "" ]; then
+	op="$op --revision=$snap_revision"
+    fi
+
+    for s in "${snaps[@]}"
+    do
+	echo "removing snapping $s"
+	sudo snap remove $op $s
+    done
+    echo ""
+    echo "-------------------------------------"
+    echo "Listing the current installed snaps  "
+    echo "-------------------------------------"
+    echo ""
+    snap list
 }
 
 clean_all(){
     echo_info "cleaning "
+    clean_snaps
 }
 
 ############################
@@ -529,10 +569,6 @@ Options
    print this help
 --clean-snaps
    Clean all the snaps"
---clean-all
-   Clean all files to make a rebuild from start"
---install-kernel
-   install the required kernel
 -i | --install-required-pkg
    install required packages for build and/or snap process
 -I | --install-all-packages
@@ -565,8 +601,16 @@ Options
    install OAI RAN with the FlexRAN agent from snap
 -s | --build-store
    Builds ans setup the store 
+-u | --install-ue
+   Install OAI UE from source 
+-U | --snap-ue
+   Install OAI UE from Snap
+-v | --revision 
+   Install specific revision of the snap. You must have developer access.
 -p | --pb-version
    Set the protobuf version for FlexRAN RTC. Valid options 2 and 3.
+-T | --snap-tracer
+   Install OAI tracer from Snap
 Usage:
 - build_m5g -i -m : insatll all the sanps and run 
 - build_m5g -i -j
@@ -581,10 +625,10 @@ function main() {
 	    --clean-snaps)
 		CLEAN_SNAPS=1
 		shift;;
-	    -k | --install-kernel)
-		INSTALL_KERNEL=1
-		echo_info "Will install the kernel"
-		shift;;
+	#    -k | --install-kernel)
+	#	INSTALL_KERNEL=1
+	#	echo_info "Will install the kernel"
+	#	shift;;
 	    -i | --install-required-pkg)
 		INSTALL_PKG=1
 		echo_info "Will install the required packages for build and snap process"
@@ -653,6 +697,22 @@ function main() {
 		echo "setting protobuf version to $2" 
 		pb_version=$2
 		shift 2;;
+	    -u | --build-oai-ue )
+		echo "Will install OAI UE from source" 
+		BUILD_OAI_UE=1
+		shift ;;
+	    -U | --snap-oai-ue )
+		echo "Will install OAI UE from snap" 
+		SNAP_OAI_UE=1
+		shift ;;
+	    -v | --revision )
+		echo "setting snap revision is set to $2" 
+		snap_revision=$2
+		shift 2;;
+	    -T | --snap-tracer )
+		echo "Will install OAI Tracer from snap" 
+		SNAP_OAI_TRACER=1
+		shift ;;
 	    -h | --help)
 		print_help
 		exit 1;;
@@ -696,6 +756,14 @@ function main() {
 	    echo_info "Building OAI RAN with the FlexRAN Agent"
             build_oai_ran
 	fi
+	if [ "$BUILD_OAI_RAN" = "1" ] ; then
+	    echo_info "Building OAI RAN with the FlexRAN Agent"
+            build_oai_ran
+	fi
+	if [ "$BUILD_OAI_UE" = "1" ] ; then
+	    echo_info "Building OAI UE"
+            build_oai_ue
+	fi
 	if [ "$BUILD_OAI_CN" = "1" ] ; then
 	    echo_info "Building OAI CN with the LL-MEC Agent"
             build_oai_cn
@@ -726,23 +794,31 @@ function main() {
 	init_snap_m5g
 	if [ "$SNAP_RTC" = "1" ] ; then
 	    echo_info "Snap FlexRAN realtime controller"
-        snap_rtc
+            snap_m5g_module "flexran"
 	fi
 	if [ "$SNAP_OAI_RAN" = "1" ] ; then
 	    echo_info "Snap OAI RAN with the FlexRAN Agent"
-        snap_oai_ran
+            snap_m5g_module "oai-ran"
+	fi
+	if [ "$SNAP_OAI_UE" = "1" ] ; then
+	    echo_info "Snap OAI UE"
+            snap_m5g_module "oai-ue"
 	fi
 	if [ "$SNAP_OAI_CN" = "1" ] ; then
 	    echo_info "Snap OAI CN with the LL-MEC Agent"
-            snap_oai_cn
+            snap_m5g_module "oai-cn"
 	fi
 	if [ "$SNAP_LLMEC" = "1" ] ; then
 	    echo_info "Snap lowlatency MEC platforms"
-            snap_llmec
+            snap_m5g_module "ll-mec"
 	fi
 	if [ "$SNAP_OVS_GTP" = "1" ] ; then
-	    echo_info "Snap OVS with GTP"
-            snap_ovs_gtp
+	    echo_info "Snap OVS with GTP not yet supported !"
+            #snap_ovs_gtp
+	fi
+	if [ "$SNAP_OAI_TRACER" = "1" ] ; then
+	    echo_info "Snap OAI Tracer"
+            snap_m5g_module "oai-tracer"
 	fi
     fi
     

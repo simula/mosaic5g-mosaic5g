@@ -24,3 +24,7 @@
 [submodule "ll-mec-ovs"]
 	path = ovs-gtp
 	url = https://gitlab.eurecom.fr/mosaic5g/ll-mec-ovs.git
+[submodule "oai-ue"]
+	path = oai-ue
+	url = https://gitlab.eurecom.fr/oai/openairinterface5g.git
+	branch = develop
