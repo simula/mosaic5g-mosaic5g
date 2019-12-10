@@ -131,16 +131,15 @@ case "$os" in
   rhel)   os_base="fedora"; os_pm="yum"; os_cmake="cmake3" ;;
   centos) os_base="fedora"; os_pm="yum"; os_cmake="cmake3" ;;
   debian) os_base="debian"; os_pm="apt-get"; os_cmake="cmake" ;;
-  ubuntu) os_base="debian"; os_pm="apt-get"; os_cmake="cmake" ;;
+  ubuntu) os_base="debian"; os_pm="apt"; os_cmake="cmake" ;;
 esac
 
 check_supported_os_dist() {
     case "$os_dist" in
         "ubuntu18.04") return 0 ;;
-        "ubuntu17.10") return 0 ;;
+	"ubuntu17.10") return 0 ;;
         "ubuntu17.04") return 0 ;;
         "ubuntu16.04") return 0 ;;
-        "ubuntu14.04") return 0 ;;
         "fedora24")    return 0 ;;
         "rhel7")       return 0 ;;
         "centos7")     return 0 ;;
