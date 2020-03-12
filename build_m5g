@@ -110,6 +110,10 @@ store_path=$m5g_path/store
 store_sdk=$m5g_path/store/sdk
 store_branch=develop
 
+kube5g_path=$m5g_path/kube5g
+kube5g_sdk=$m5g_path/kube5g
+kube5g_branch=master
+
 echo_info "Mosaic5G Path:           $m5g_path"
 echo_info "FlexRAN Path:            $rtc_path"
 echo_info "LL-MEC Path:             $llmec_path"
@@ -119,6 +123,9 @@ echo_info "Store Path:              $store_path"
 echo_info "OAI oai_ran Path:        $oai_ran_path"
 echo_info "OAI oai_ue Path:         $oai_ue_path"
 echo_info "OAI oai_cn Path:         $oai_cn_path"
+echo_info "kube5g Path:             $kube5g_path"
+
+
 
 
 os=$(grep "^ID=" /etc/os-release | sed "s/ID=//" | sed "s/\"//g")
@@ -231,6 +238,30 @@ install_required_packages(){
     
 }
 
+
+############################
+# install required tools for kube5g
+##########################
+
+install_required_packages_kube5g(){
+
+    if ! check_supported_os_dist; then
+        echo_error "Your distribution $os_dist is not supported by Mosaic5G !"
+        exit 1
+    fi
+    
+    $SUDO $os_pm  update -y
+	$SUDO $os_pm install -y \
+	      docker.io docker-compose    
+}
+
+
+clone_m5g_images(){
+    docker pull mosaic5gecosys/oairan:1.2
+    docker pull mosaic5gecosys/oaicn:1.2
+    docker pull mosaic5gecosys/m5g_operator:1.0
+    docker pull mysql:5.6
+}
 install_python_packages(){
     
     $SUDO pip install ipcalc
@@ -476,6 +507,15 @@ build_jox(){
     echo_success "Cloned JoX $jox_branch branch"
 }
 
+
+build_kube5g(){
+    git submodule init
+    git submodule update kube5g
+    cd $kube5g
+    git checkout $kube5g_branch
+    echo_success "Built kube5g $kube5g_branch branch"
+}
+
 build_m5g (){
  
     #EDGE nodes
@@ -586,6 +626,8 @@ Options
    install required packages for build and/or snap process
 -I | --install-all-packages
    Install both required and developper/optional/useful pachages 
+--clean-kube5g-req
+   Install the requirements of kube5g: docker, docker-compose
 -c | --build-oai-cn
    Builds OAI CN with the LL-MEC agent from source
 -C | --snap-oai-cn
@@ -613,7 +655,9 @@ Options
 -R | --snap-oai-ran
    install OAI RAN with the FlexRAN agent from snap
 -s | --build-store
-   Builds ans setup the store 
+   Builds and setup the store 
+-k | --build-kube5g
+   Builds and setup the kube5g
 -u | --install-ue
    Install OAI UE from source 
 -U | --snap-ue
@@ -650,6 +694,14 @@ function main() {
 		INSTALL_OPTIONAL=1
 		echo_info "Will install optional/useful packages"
 		shift;;
+        --install-kube5g-req)
+		INSTALL_KUBE5G_REQUIRMENTS=1
+        echo_info "Will install the reuquirements of kube5g"
+        shift;;
+        --clone-m5g-docker)
+		CLONE_M5G_DOCKER=1
+        echo_info "Will clone all the docker images of Mosaic5G"
+        shift;;
 	    -m | --build-m5g)
 		BUILD_M5G=1
 		echo_info "Will build mosaic5G.io platforms from source"
@@ -706,6 +758,11 @@ function main() {
 		SNAP_OAI_CN=1
 		echo_info "Will install OAI CN with the LL-MEC Agent from snap"
 		shift;;
+
+        -k | --build-kube5g)
+		BUILD_KUBE5G=1
+		echo_info "Will build kube5G"
+		shift;;
 	    -p | --protobuf-version)
 		echo "setting protobuf version to $2" 
 		pb_version=$2
@@ -752,6 +809,21 @@ function main() {
 	echo_info "Installing optional packages"
 	install_optional_packages
 	echo_info "Installed the optional packages"
+    fi
+
+    if [ "$INSTALL_KUBE5G_REQUIRMENTS" = "1" ] ; then
+        install_required_packages_kube5g
+        echo_info "Installed the required packages of kube5g"
+    fi
+    
+    if [ "$CLONE_M5G_DOCKER" = "1" ] ; then
+        clone_m5g_images
+        echo_info "Cloned the docker images of mosaic5g"
+    fi
+
+    if [ "$BUILD_KUBE5G" = "1" ] ; then
+        build_kube5g
+        echo_info "Build kube5g"
     fi
 
     
