@@ -28,3 +28,6 @@
 	path = oai-ue
 	url = https://gitlab.eurecom.fr/oai/openairinterface5g.git
 	branch = develop
+[submodule "kube5g"]
+	path = kube5g
+	url = git@gitlab.eurecom.fr:osama.arouk/kube5g.git
