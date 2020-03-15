@@ -30,4 +30,5 @@
 	branch = develop
 [submodule "kube5g"]
 	path = kube5g
-	url = git@gitlab.eurecom.fr:osama.arouk/kube5g.git
+	url = https://gitlab.eurecom.fr/mosaic5g/kube5g.git
+	branch = develop
