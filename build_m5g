@@ -235,7 +235,8 @@ install_required_packages(){
 
     $SUDO snap install snapcraft --classic
     #$SUDO snap install snapcraft --classic
-    
+
+    install_required_packages_kube5g
 }
 
 
@@ -256,13 +257,13 @@ install_required_packages_kube5g(){
 	  docker-compose    
 }
 
-
-clone_m5g_images(){
+pull_docker_images(){
     docker pull mosaic5gecosys/oairan:1.2
     docker pull mosaic5gecosys/oaicn:1.2
     docker pull mosaic5gecosys/m5g_operator:1.0
     docker pull mysql:5.6
 }
+
 install_python_packages(){
     
     $SUDO pip install ipcalc
@@ -398,6 +399,7 @@ build_oai_ran(){
     cd $oai_ran_build
     ./build_oai -I  -w USRP
     ./build_oai -c -C --eNB  -w USRP 
+
     cd $m5g_path
     cp $oai_ran_bin $m5g_bin
     echo_success "Build OAI RAN $oai_ran_branch branch with FlexRAN agent in $oai_ran_bin"
@@ -410,6 +412,7 @@ build_oai_ue(){
     cd $oai_ue_build
     ./build_oai -I  -w USRP
     ./build_oai -c -C --UE  -w USRP 
+
     cd $m5g_path
     cp $oai_ue_bin $m5g_bin
     echo_success "Build OAI UE $oai_ue_branch branch in $oai_ue_bin"
@@ -437,10 +440,12 @@ build_oai_cn(){
 build_llmec(){
 
     git submodule update ll-mec
+
     cd $llmec_path
     git checkout $llmec_branch
     ./install_dependencies.sh
     ./build_ll-mec.sh -d 
+
     cd $m5g_path
     cp $llmec_bin $m5g_bin
     echo_success "Built LL-MEC $llmec_branch branch in $llmec_bin"
@@ -504,7 +509,7 @@ build_jox(){
     ./script/build_jox -i
     ./script/build_jox -x
     
-    cd -
+    cd $m5g_path
     echo_success "Cloned JoX $jox_branch branch"
 }
 
@@ -512,10 +517,10 @@ build_jox(){
 build_kube5g(){
 
     git submodule update kube5g
-    cd $kube5g
+    cd $kube5g_path
     git checkout $kube5g_branch
-
-    cd -
+    
+    cd $m5g_path
     echo_success "Built kube5g $kube5g_branch branch"
 }
 
@@ -638,15 +643,15 @@ Options
 --clean-snaps
    Clean all the snaps"
 -i | --install-required-pkg
-   install required packages for build and/or snap process
+   Install required packages for build and/or snap process
 -I | --install-all-packages
    Install both required and developper/optional/useful pachages 
---clean-kube5g-req
-   Install the requirements of kube5g: docker, docker-compose
 -c | --build-oai-cn
    Builds OAI CN with the LL-MEC agent from source
 -C | --snap-oai-cn
    install OAI CN with the LL-MEC agent from snap
+-D | --pull-docker-images
+   Pull all the docker images of Mosaic5G
 -m | --build-m5g
    Builds all the Mosaic5G.io software plarforms from source 
 -M | --snap-m5g
@@ -668,7 +673,7 @@ Options
 -r | --build-oai-ran
    Builds OAI RAN with the FlexRAN agent from source
 -R | --snap-oai-ran
-   install OAI RAN with the FlexRAN agent from snap
+   Install OAI RAN with the FlexRAN agent from snap
 -s | --build-store
    Builds and setup the store 
 -k | --build-kube5g
@@ -709,14 +714,10 @@ function main() {
 		INSTALL_OPTIONAL=1
 		echo_info "Will install optional/useful packages"
 		shift;;
-        --install-kube5g-req)
-		INSTALL_KUBE5G_REQUIRMENTS=1
-		echo_info "Will install the reuquirements of kube5g"
+            -D | --pull-docker-images)
+		PULL_DOCKER_IMAGES=1
+		echo_info "Will pull all the docker images of Mosaic5G"
 		shift;;
-        --clone-m5g-docker)
-		CLONE_M5G_DOCKER=1
-        echo_info "Will clone all the docker images of Mosaic5G"
-        shift;;
 	    -m | --build-m5g)
 		BUILD_M5G=1
 		echo_info "Will build mosaic5G.io platforms from source"
@@ -825,20 +826,10 @@ function main() {
 	install_optional_packages
 	echo_info "Installed the optional packages"
     fi
-
-    if [ "$INSTALL_KUBE5G_REQUIRMENTS" = "1" ] ; then
-        install_required_packages_kube5g
-        echo_info "Installed the required packages of kube5g"
-    fi
-    
-    if [ "$CLONE_M5G_DOCKER" = "1" ] ; then
-        clone_m5g_images
-        echo_info "Cloned the docker images of mosaic5g"
-    fi
-
-    if [ "$BUILD_KUBE5G" = "1" ] ; then
-        build_kube5g
-        echo_info "Build kube5g"
+  
+    if [ "$PULL_DOCKER_IMAGES" = "1" ] ; then
+        pull_docker_images
+        echo_info "Pull the docker images of mosaic5g"
     fi
 
     
@@ -884,6 +875,12 @@ function main() {
 	    echo_info "Building Store"
             build_store
 	fi
+
+	if [ "$BUILD_KUBE5G" = "1" ] ; then
+            build_kube5g
+            echo_info "Build kube5g"
+	fi
+
     fi
     
     if [ "$SNAP_M5G" = "1" ] ; then
