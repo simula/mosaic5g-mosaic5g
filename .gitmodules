@@ -1,7 +1,7 @@
 [submodule "flexran"]
 	path = flexran
 	url = https://gitlab.eurecom.fr/flexran/flexran-rtc.git
-	branch = develop-uplink 
+	branch = develop 
 [submodule "ll-mec"]
 	path = ll-mec
 	url = https://gitlab.eurecom.fr/mosaic5g/ll-mec.git
