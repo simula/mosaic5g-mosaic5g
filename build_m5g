@@ -112,7 +112,7 @@ store_branch=develop
 
 kube5g_path=$m5g_path/kube5g
 kube5g_sdk=$m5g_path/kube5g
-kube5g_branch=master
+kube5g_branch=develop
 
 echo_info "Mosaic5G Path:           $m5g_path"
 echo_info "FlexRAN Path:            $rtc_path"
@@ -251,8 +251,9 @@ install_required_packages_kube5g(){
     fi
     
     $SUDO $os_pm  update -y
-	$SUDO $os_pm install -y \
-	      docker.io docker-compose    
+    $SUDO $os_pm install -y \
+	  docker.io \
+	  docker-compose    
 }
 
 
@@ -509,10 +510,12 @@ build_jox(){
 
 
 build_kube5g(){
-    git submodule init
+
     git submodule update kube5g
     cd $kube5g
     git checkout $kube5g_branch
+
+    cd -
     echo_success "Built kube5g $kube5g_branch branch"
 }
 
@@ -531,7 +534,10 @@ build_m5g (){
     #Control apps and Orch
     build_store
     build_jox
+    
+    build_kube5g
 }
+declare -a oaicn_snaps=("oai-mme" "oai-hss" "oai-spgwc" "oai-spgwu")
 
 snap_m5g_module(){
     echo "Snapping $1"
@@ -546,6 +552,15 @@ snap_m5g_module(){
     fi
     echo "snap $op $1 --channel=edge --devmode"
     sudo snap $op $1 --channel=edge --devmode
+
+    if  [ "$1" = "oai-cn" ] ; then
+	for s in "${oaicn_snaps[@]}"
+	do
+	    echo "snap  $s --channel=edge --devmode"
+	    sudo snap $s --channel=edge --devmode
+	done
+    fi
+
     echo "-----------------------------------"
     echo "         $1 SNAP INFO         "
     echo "-----------------------------------"
@@ -696,8 +711,8 @@ function main() {
 		shift;;
         --install-kube5g-req)
 		INSTALL_KUBE5G_REQUIRMENTS=1
-        echo_info "Will install the reuquirements of kube5g"
-        shift;;
+		echo_info "Will install the reuquirements of kube5g"
+		shift;;
         --clone-m5g-docker)
 		CLONE_M5G_DOCKER=1
         echo_info "Will clone all the docker images of Mosaic5G"
@@ -759,7 +774,7 @@ function main() {
 		echo_info "Will install OAI CN with the LL-MEC Agent from snap"
 		shift;;
 
-        -k | --build-kube5g)
+            -k | --build-kube5g)
 		BUILD_KUBE5G=1
 		echo_info "Will build kube5G"
 		shift;;
