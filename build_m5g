@@ -542,8 +542,8 @@ build_m5g (){
     
     build_kube5g
 }
-declare -a oaicn_snaps=("oai-mme" "oai-hss" "oai-spgwc" "oai-spgwu")
 
+declare -a oaicn_snaps=("oai-mme" "oai-hss" "oai-spgwc" "oai-spgwu")
 snap_m5g_module(){
     echo "Snapping $1"
     snap list $1 &> /dev/null
@@ -561,8 +561,14 @@ snap_m5g_module(){
     if  [ "$1" = "oai-cn" ] ; then
 	for s in "${oaicn_snaps[@]}"
 	do
-	    echo "snap  $s --channel=edge --devmode"
-	    sudo snap $s --channel=edge --devmode
+	    snap list $s &> /dev/null
+	    if [ $? -eq 0 ]; then
+		op="refresh"
+	    else
+		op="install"
+	    fi
+	    echo "snap  $op $s --channel=edge --devmode"
+	    sudo snap $op $s --channel=edge --devmode
 	done
     fi
 
@@ -573,8 +579,8 @@ snap_m5g_module(){
     snap info $1
 }
 
-declare -a snaps=("oai-cn" "oai-ran" "oai-ue" "oai-tracer" "flexran" "ll-mec")
- 
+
+declare -a snaps=("oai-cn" "oai-ran" "oai-ue" "oai-tracer" "flexran" "ll-mec") 
 snap_m5g (){
     for s in "${snaps[@]}"
     do
