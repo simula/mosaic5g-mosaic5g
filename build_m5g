@@ -57,7 +57,7 @@ cecho()  {
 
 echo_error()   { cecho "$*" $red          ;}
 echo_fatal()   { cecho "$*" $red; exit -1 ;}
-echo_warning() { cecho "$*" $yellow       ;}
+echo_warn()    { cecho "$*" $yellow       ;}
 echo_success() { cecho "$*" $green        ;}
 echo_info()    { cecho "$*" $blue         ;}
 
@@ -126,8 +126,6 @@ echo_info "OAI oai_cn Path:         $oai_cn_path"
 echo_info "kube5g Path:             $kube5g_path"
 
 
-
-
 os=$(grep "^ID=" /etc/os-release | sed "s/ID=//" | sed "s/\"//g")
 os_release=$(grep "^VERSION_ID=" /etc/os-release | sed "s/VERSION_ID=//" | sed "s/\"//g")
 os_dist=$os$os_release
@@ -156,6 +154,19 @@ check_supported_os_dist() {
 pb_version=3
 
 snap_revision=""
+
+function list_include_item {
+  local list="$1"
+  local item="$2"
+  if [[ $list =~ (^|[[:space:]])"$item"($|[[:space:]]) ]] ; then
+    # yes, list include item
+    result=0
+  else
+    result=1
+  fi
+  return $result
+}
+
 ################################
 # Function to killall the subprocesses when Ctrl-C Key is hit
 ###############################
@@ -555,10 +566,8 @@ snap_m5g_module(){
     if [ "$snap_revision" != "" ]; then
 	op="$op --revision=$snap_revision"
     fi
-    echo "snap $op $1 --channel=edge --devmode"
-    sudo snap $op $1 --channel=edge --devmode
-
-    if  [ "$1" = "oai-cn" ] ; then
+    
+    if  [ "$1" = "oai-cn2" ] ; then
 	for s in "${oaicn_snaps[@]}"
 	do
 	    snap list $s &> /dev/null
@@ -567,20 +576,28 @@ snap_m5g_module(){
 	    else
 		op="install"
 	    fi
+
 	    echo "snap  $op $s --channel=edge --devmode"
 	    sudo snap $op $s --channel=edge --devmode
+	    echo "-----------------------------------"
+	    echo "         $1 SNAP INFO         "
+	    echo "-----------------------------------"
+	    
+	    snap info $s
 	done
-    fi
-
-    echo "-----------------------------------"
-    echo "         $1 SNAP INFO         "
-    echo "-----------------------------------"
+    else 
+	echo "snap $op $1 --channel=edge --devmode"
+	sudo snap $op $1 --channel=edge --devmode
+	echo "-----------------------------------"
+	echo "         $1 SNAP INFO         "
+	echo "-----------------------------------"
     
-    snap info $1
+	snap info $1
+    fi
 }
 
 
-declare -a snaps=("oai-cn" "oai-ran" "oai-ue" "oai-tracer" "flexran" "ll-mec") 
+declare -a snaps=("oai-cn" "oai-cn2" "oai-ran" "oai-ue" "oai-tracer" "flexran" "ll-mec") 
 snap_m5g (){
     for s in "${snaps[@]}"
     do
@@ -654,8 +671,8 @@ Options
    Install both required and developper/optional/useful pachages 
 -c | --build-oai-cn
    Builds OAI CN with the LL-MEC agent from source
--C | --snap-oai-cn
-   install OAI CN with the LL-MEC agent from snap
+-C | --snap-oai-cn [version]
+   install OAI CN with the LL-MEC agent from snap. Available versions v1 (stable) and v2 (latest). v1 is the default
 -D | --pull-docker-images
    Pull all the docker images of Mosaic5G
 -m | --build-m5g
@@ -777,10 +794,17 @@ function main() {
 		echo_info "Will build OAI CN with the LL-MEC Agent from source"
 		shift;;
 	    -C | --snap-oai-cn)
-		SNAP_OAI_CN=1
-		echo_info "Will install OAI CN with the LL-MEC Agent from snap"
-		shift;;
-
+		list_include_item "v1 v2" $2
+		if [[ $? -ne 0 ]] ; then
+		    echo_warn "version $2 is not recognized. Default v1"
+		    SNAP_OAI_CN="v1"
+		    sv=1
+		else
+		    SNAP_OAI_CN="$2"
+		    sv=2
+		fi
+		echo_info "Will install OAI CN $SNAP_OAI_CN with the LL-MEC Agent from snap"
+		shift $sv ;;
             -k | --build-kube5g)
 		BUILD_KUBE5G=1
 		echo_info "Will build kube5G"
@@ -907,8 +931,11 @@ function main() {
 	    echo_info "Snap OAI UE"
             snap_m5g_module "oai-ue"
 	fi
-	if [ "$SNAP_OAI_CN" = "1" ] ; then
-	    echo_info "Snap OAI CN with the LL-MEC Agent"
+	if [ "$SNAP_OAI_CN" = "v2" ] ; then
+	    echo_info "Snap OAI CN v2 with the LL-MEC Agent"
+            snap_m5g_module "oai-cn2"
+	else
+	    echo_info "Snap OAI CN v1 with the LL-MEC Agent"
             snap_m5g_module "oai-cn"
 	fi
 	if [ "$SNAP_LLMEC" = "1" ] ; then
