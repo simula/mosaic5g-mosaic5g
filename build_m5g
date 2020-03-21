@@ -795,16 +795,10 @@ function main() {
 		shift;;
 	    -C | --snap-oai-cn)
 		list_include_item "v1 v2" $2
-		if [[ $? -ne 0 ]] ; then
-		    echo_warn "version $2 is not recognized. Default v1"
-		    SNAP_OAI_CN="v1"
-		    sv=1
-		else
-		    SNAP_OAI_CN="$2"
-		    sv=2
-		fi
+		[[ $? -ne 0 ]] && echo "" && echo_error "[ERR] Snap oai-cn version $2 not recognized" && return $?
+		SNAP_OAI_CN="$2"
 		echo_info "Will install OAI CN $SNAP_OAI_CN with the LL-MEC Agent from snap"
-		shift $sv ;;
+		shift 2 ;;
             -k | --build-kube5g)
 		BUILD_KUBE5G=1
 		echo_info "Will build kube5G"
@@ -934,7 +928,7 @@ function main() {
 	if [ "$SNAP_OAI_CN" = "v2" ] ; then
 	    echo_info "Snap OAI CN v2 with the LL-MEC Agent"
             snap_m5g_module "oai-cn2"
-	else
+	elif [ "$SNAP_OAI_CN" = "v1" ] ; then
 	    echo_info "Snap OAI CN v1 with the LL-MEC Agent"
             snap_m5g_module "oai-cn"
 	fi
