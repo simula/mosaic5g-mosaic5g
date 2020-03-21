@@ -265,7 +265,22 @@ install_required_packages_kube5g(){
     $SUDO $os_pm  update -y
     $SUDO $os_pm install -y \
 	  docker.io \
-	  docker-compose    
+	  docker-compose
+    # The following requirements are to run mosaic5g-operator in kubernetes using microK8s
+    echo_info "Installing microk8s version 1.14 stable"
+    $SUDO snap install microk8s --classic --channel=1.14/stable
+    $SUDO snap install kubectl --classic
+    echo_info "Starting microk8s"
+    microk8s.start
+    microk8s.enable dns
+    $SUDO chown ${MYNAME} -R $HOME/.kube
+    microk8s.kubectl config view --raw > $HOME/.kube/config
+    # enable privileged
+    $SUDO bash -c 'echo "--allow-privileged=true" >> /var/snap/microk8s/current/args/kubelet'
+    $SUDO bash -c 'echo "--allow-privileged=true" >> /var/snap/microk8s/current/args/kube-apiserver'
+    # Restart kube
+    $SUDO systemctl restart snap.microk8s.daemon-kubelet.service
+    $SUDO systemctl restart snap.microk8s.daemon-apiserver.service 
 }
 
 pull_docker_images(){
@@ -853,7 +868,7 @@ function main() {
   
     if [ "$PULL_DOCKER_IMAGES" = "1" ] ; then
         pull_docker_images
-        echo_info "Pull the docker images of mosaic5g"
+        echo_info "Pulled all the docker images of mosaic5g"
     fi
 
     
@@ -901,8 +916,8 @@ function main() {
 	fi
 
 	if [ "$BUILD_KUBE5G" = "1" ] ; then
+            echo_info "Building kube5g"
             build_kube5g
-            echo_info "Build kube5g"
 	fi
 
     fi
