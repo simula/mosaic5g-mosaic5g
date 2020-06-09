@@ -532,8 +532,8 @@ build_jox(){
     git checkout $jox_branch
     #source ./joxenv
     echo_info "building JoX"
-    ./script/build_jox -i
-    ./script/build_jox -x
+    ./scripts/build_jox.sh -i
+    ./scripts/build_jox.sh -x
     
     cd $m5g_path
     echo_success "Cloned JoX $jox_branch branch"
