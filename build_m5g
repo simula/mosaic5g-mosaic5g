@@ -296,7 +296,7 @@ install_python_packages(){
     $SUDO pip install matplotlib
     $SUDO pip install pyyaml
     $SUDO pip install tornado
-    $SUDO pip install enum
+    $SUDO pip install enum34
     $SUDO pip install requests
     $SUDO pip install flask
     
