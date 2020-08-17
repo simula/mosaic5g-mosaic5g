@@ -296,7 +296,7 @@ install_python_packages(){
     $SUDO pip install matplotlib
     $SUDO pip install pyyaml
     $SUDO pip install tornado
-    $SUDO pip install enum34
+    $SUDO pip install enum
     $SUDO pip install requests
     $SUDO pip install flask
     
@@ -307,6 +307,12 @@ install_npm_packages(){
     sudo npm install apidoc -g
 }
 install_optional_packages (){
+
+    if ! check_supported_os_dist; then
+        echo_error "Your distribution $os_dist is not supported by Mosaic5G !"
+        exit 1
+    fi
+
     $SUDO $os_pm get update
     $SUDO $os_pm install -y \
 	  check \
@@ -336,13 +342,20 @@ install_optional_packages (){
 	  wget \
 	  libyaml-dev \
 	  iperf \
-	  iproute \
 	  iptables \
 	  meld    \
 	  gitk \
 	  openssh-server \
 	  screen 
-	         
+
+    if [ "$os_dist" == "ubuntu18.04" ] ; then
+	$SUDO $os_pm install -y \
+	      iproute2
+    else
+	$SUDO $os_pm install -y \
+	      iproute 
+    fi
+
 }
 
 
