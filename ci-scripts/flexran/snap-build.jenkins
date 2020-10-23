@@ -43,11 +43,10 @@ pipeline {
     stages {
         // STAGE 0: CLONE THE PROJECT FROM FOR USING SCM
         stage('Clone') {
-            checkout scm
-            // steps {
-            //     echo "STAGE #0: Clone the project from git using scm"
-            //     checkout scm
-            // }
+            steps {
+                echo "STAGE #0: Clone the project from git using scm"
+                checkout scm
+            }
         }
 
         // STAGE 1: PREPARE THE ENVIRONMENT FOR BUILDING THE SNAP
