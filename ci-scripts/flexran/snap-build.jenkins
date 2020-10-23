@@ -1,0 +1,159 @@
+/*
+#! /bin/groovy
+################################################################################
+# Licensed to the Mosaic5G under one or more contributor license
+# agreements. See the NOTICE file distributed with this
+# work for additional information regarding copyright ownership.
+# The Mosaic5G licenses this file to You under the
+# Apache License, Version 2.0  (the "License");
+# you may not use this file except in compliance with the License.
+# You may obtain a copy of the License at
+#  
+#       http://www.apache.org/licenses/LICENSE-2.0
+#
+#   Unless required by applicable law or agreed to in writing, software
+#   distributed under the License is distributed on an "AS IS" BASIS,
+#   WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
+#   See the License for the specific language governing permissions and
+#   limitations under the License.
+################################################################################
+# file          kube5g_snap_build.jenkinsfile
+# brief         Build snap versions of Mosaic5G using different versions of \
+                ubuntu (e.g., 16.04 and 18.04) using docker, push them to official channels (e.g., edge) \
+                or temporary channels (e.g., edge/ci)
+# authors:       
+        - Osama Arouk (C) - 2020 arouk@eurecom.fr
+        - Alireza Mohammadi (C) - 2020 alireza.mohammadi@eurecom.fr
+*/
+
+
+// TODO: Add the parameters for ease of edit and access
+def pipelineContext = [:] // Parameters will go here
+
+pipeline {
+    // Here we define the node that will run this script using the labels assigned to them previously
+    agent {
+        node {
+        label 'agent'
+        }
+    }
+
+    // The pipeline will contain a set of stages grouped here, that will run sequentially
+    // Each stage itself contains a sequence of steps that may contain some scripts to run
+    stages {
+        // STAGE 0: CLONE THE PROJECT FROM FOR USING SCM
+        stage('Clone') {
+            echo "STAGE #0: Clone the project from git using scm"
+            checkout scm
+        }
+
+        // STAGE 1: PREPARE THE ENVIRONMENT FOR BUILDING THE SNAP
+        stage('snap-prepare') {
+            steps {
+                echo "STAGE #1: Prepare the snap environment"
+
+                script {
+                    try {
+                        // Check the docker images, if the Ubuntu image present, then remove it
+                        // TODO: Use parameters to select the correct image version
+                        echo "Remove the docker container"
+                        sh(
+                        label: 'remove the docker container used to build the snap',
+                        script: '''
+                        if sudo docker ps --all | grep -q snap-build; then
+                            sudo docker rm --force snap-build-ubuntu1804
+                        fi
+                        '''
+                        )
+                    } catch (err) {
+                        error("Failed to finish the stage #1. Check if the docker is working properly.")
+                    }
+                }
+
+                // Get the files from the GitLab
+                // TODO: Use Jenkins user credentials
+                echo "Cloning store project"                        
+                // git credentialsId: 'alireza-eurecom-gitlab',
+                git credentialsId: 'arouk',
+                url: 'git@gitlab.eurecom.fr:mosaic5g/store.git',
+                branch: 'jenkins'
+
+                echo "Cloning flexran project"                        
+                // git credentialsId: 'alireza-eurecom-gitlab',
+                git credentialsId: 'arouk',
+                url: 'git@gitlab.eurecom.fr:flexran/flexran-rtc.git',
+                branch: 'jenkins'
+
+                echo "STAGE #1 OUTPUT SUCCESS"
+            }
+        }
+
+        // STAGE 2: BUILD THE SNAP INSIDE THE DOCKER IMAGE
+        stage('snap-build') {
+            steps {
+                echo "STAGE #2: Building the snap"
+
+                dir("snaps"){
+                    script{
+                        try{
+                            // Set the name, build the snap, get the version, and change the owner user
+                            // TODO: Added login for docker
+                            echo "Run the build script"
+                            sh(
+                            label: 'building the snap within docker container',
+                            script: '''
+                            snap_remote="flexran"
+                            sudo ./build-final.sh -n $snap_remote -c all
+                            '''
+                            )
+
+                            echo "Change the ownership"
+                            sh(
+                            label: 'change the ownership',
+                            script: '''
+                            snap_remote="flexran"
+                            version=$(grep -m1 version: $snap_remote/snap/snapcraft.yaml | cut -f2 -d: | tr -d "'" | tr -d " ")
+                            snap_name=$snap_remote"_"$version"_multi.snap"
+                            sudo chown -R jenkins:jenkins $snap_remote/$snap_name
+                            '''
+                            )
+                            echo "STAGE #2 OUTPUT SUCCESS"
+                        } catch (err) {
+                            error("Failed to finish the stage #2. Check the script output and access rights.")
+                        }
+                    }
+                }
+                echo "STAGE #2 OUTPUT SUCCESS"
+            }
+        }
+
+        // STAGE 3: NOW PUSH THE SNAP TO THE CI CHANNEL
+        stage('snap-push') {
+            steps {
+                echo "STAGE #3: Publishing the snap"
+
+                dir('snaps'){
+                script{
+                echo "Pushing the snap to the CI channel"
+
+                // Push the build to the snap store
+                try{
+                    sh(
+                    label: 'push the snap to temporary channel /ci',
+                    script: '''
+                    echo "pushing flexran to the channel edge/ci is skipped for the purpose of testing the other steps"
+                    ##./publish-final.sh -s flexran -c edge/ci
+
+                    '''
+                    )
+                } catch (err) {
+                    error("Failed to finish the stage #3. Check the script output and access rights.")
+                }
+            }
+            }
+
+            echo "STAGE #3 OUTPUT SUCCESS"
+            }
+        }
+    }
+}
