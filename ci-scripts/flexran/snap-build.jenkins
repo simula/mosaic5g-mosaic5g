@@ -34,7 +34,8 @@ pipeline {
     // Here we define the node that will run this script using the labels assigned to them previously
     agent {
         node {
-        label 'agent'
+        // label 'agent'
+        label 'cigarier'
         }
     }
 
