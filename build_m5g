@@ -22,7 +22,7 @@
 #
 ################################################################################
 # file build_m5g
-# brief  Mosaic5G.io automated build and install tool 
+# brief  mosaic5g.io automated build and install tool 
 # author  Navid Nikaein
 
 export DEBIAN_FRONTEND=noninteractive
@@ -246,7 +246,8 @@ install_required_packages(){
 
     $SUDO snap install snapcraft --classic
     #$SUDO snap install snapcraft --classic
-
+    $SUDO snap install review-tools
+    
     install_required_packages_kube5g
 }
 
@@ -431,7 +432,7 @@ build_rtc(){
     echo_success "Built FlexRAN RTC branch $rtc_branch in $m5g_bin"
 }
 build_oai_ran(){
-
+    
     git submodule update oai-ran 
     cd $oai_ran_path
     git checkout $oai_ran_branch
@@ -531,8 +532,8 @@ build_store(){
     git checkout $store_branch
     cd $store_sdk
     mkdir -p docs
-    doxygen
-    apidoc -i lib/ -o ./docs/apidoc -f ".*\\.py$"
+    #doxygen
+    #apidoc -i lib/ -o ./docs/apidoc -f ".*\\.py$"
     echo_success "Generated the store $store_branch branch"
 
     cd $m5g_path
@@ -605,17 +606,25 @@ snap_m5g_module(){
 		op="install"
 	    fi
 
-	    echo "snap  $op $s --channel=edge --devmode"
-	    sudo snap $op $s --channel=edge --devmode
+	    echo "snap  $op $s"
+	    sudo snap $op $s #--channel=edge --devmode
 	    echo "-----------------------------------"
 	    echo "         $1 SNAP INFO         "
 	    echo "-----------------------------------"
 	    
 	    snap info $s
 	done
-    else 
+    elif [ "$1" = "oai-cn" ] ; then
 	echo "snap $op $1 --channel=edge --devmode"
 	sudo snap $op $1 --channel=edge --devmode
+	echo "-----------------------------------"
+	echo "         $1 SNAP INFO         "
+	echo "-----------------------------------"
+    
+	snap info $1
+    else
+	echo "snap $op $1 "
+	sudo snap $op $1
 	echo "-----------------------------------"
 	echo "         $1 SNAP INFO         "
 	echo "-----------------------------------"
@@ -625,7 +634,7 @@ snap_m5g_module(){
 }
 
 
-declare -a snaps=("oai-cn" "oai-cn2" "oai-ran" "oai-ue" "oai-tracer" "flexran" "ll-mec") 
+declare -a snaps=("oai-cn" "oai-cn2" "oai-ran" "oai-ue" "oai-tracer" "flexran" "ll-mec" "oai-sim") 
 snap_m5g (){
     for s in "${snaps[@]}"
     do
@@ -727,6 +736,8 @@ Options
    Install OAI RAN with the FlexRAN agent from snap
 -s | --build-store
    Builds and setup the store 
+-S | --snap-oai-sim
+   Install OAI SIM with the FlexRAN agent from snap
 -k | --build-kube5g
    Builds and setup the kube5g
 -u | --install-ue
@@ -807,7 +818,7 @@ function main() {
 		shift;;
 	    -r | --build-oai-ran)
 		BUILD_OAI_RAN=1
-		echo_info "Will buildOAI RAN with the FlexRAN Agent from source"
+		echo_info "Will build OAI RAN with the FlexRAN Agent from source"
 		shift;;
 	    -R | --snap-oai-ran)
 		SNAP_OAI_RAN=1
@@ -816,6 +827,10 @@ function main() {
 	    -s | --build-store)
 		BUILD_STORE=1
 		echo_info "Will build Mosaic5G store" 
+		shift;;
+	    -S | --build-oai-sim)
+		SNAP_OAI_SIM=1
+		echo_info "Will build OAI SIM with the FlexRAN Agent from source"
 		shift;;
 	    -c | --build-oai-cn)
 		BUILD_OAI_CN=1
@@ -948,6 +963,10 @@ function main() {
 	if [ "$SNAP_OAI_RAN" = "1" ] ; then
 	    echo_info "Snap OAI RAN with the FlexRAN Agent"
             snap_m5g_module "oai-ran"
+	fi
+	if [ "$SNAP_OAI_SIM" = "1" ] ; then
+	    echo_info "Snap OAI SIM with the FlexRAN Agent"
+            snap_m5g_module "oai-sim"
 	fi
 	if [ "$SNAP_OAI_UE" = "1" ] ; then
 	    echo_info "Snap OAI UE"
