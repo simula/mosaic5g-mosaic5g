@@ -1,34 +1,34 @@
 [submodule "flexran"]
 	path = flexran
-	url = https://gitlab.eurecom.fr/flexran/flexran-rtc.git
+	url = https://github.com/simula/mosaic5g-flexran-rtc.git
 	branch = develop 
 [submodule "ll-mec"]
 	path = ll-mec
-	url = https://gitlab.eurecom.fr/mosaic5g/ll-mec.git
+	url = https://github.com/simula/mosaic5g-ll-mec.git
 	branch = develop
 [submodule "store"]
 	path = store
-	url = https://gitlab.eurecom.fr/mosaic5g/store.git
+	url = https://github.com/simula/mosaic5g-store.git
 [submodule "jox"]
 	path = jox
-	url = https://gitlab.eurecom.fr/mosaic5g/jox.git
+	url = https://github.com/simula/mosaic5g-jox.git
 	branch = develop
 [submodule "oai-ran"]
 	path = oai-ran
-	url = https://gitlab.eurecom.fr/oai/openairinterface5g.git
+	url = https://bitbucket.org/dreibh/mosaic5g-openairinterface5g.git
 	branch = develop
 [submodule "oai-cn"]
 	path = oai-cn
-	url = https://gitlab.eurecom.fr/oai/openair-cn.git
+	url = https://github.com/simula/mosaic5g-openair-cn.git
 	branch = openair-cn-llmec
 [submodule "ll-mec-ovs"]
 	path = ovs-gtp
-	url = https://gitlab.eurecom.fr/mosaic5g/ll-mec-ovs.git
+	url = https://github.com/simula/mosaic5g-ll-mec-ovs.git
 [submodule "oai-ue"]
 	path = oai-ue
-	url = https://gitlab.eurecom.fr/oai/openairinterface5g.git
+	url = https://bitbucket.org/dreibh/mosaic5g-openairinterface5g.git
 	branch = develop
 [submodule "kube5g"]
 	path = kube5g
-	url = https://gitlab.eurecom.fr/mosaic5g/kube5g.git
+	url = https://github.com/simula/mosaic5g-kube5g.git
 	branch = develop
